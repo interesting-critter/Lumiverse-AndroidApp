@@ -53,6 +53,12 @@ Native clients skip the browser's silent audio unlock workaround. Notification
 sounds and enabled TTS playback initialize audio only when a sound is requested;
 touching the app or sending a text message does not play a silent file or buffer.
 
+Layered card avatars use native gyro and accelerometer fusion for tilt, with the
+same grip calibration and horizontal/vertical response as iOS. Motion stops in
+the background and when animations are disabled. Devices without a suitable
+gyro sensor keep the browser fallback. Remote connections need the matching
+frontend deployed on their server; local hosting includes it in the APK.
+
 To switch servers or return to local hosting, press Android Back at the first
 page, or press and hold with two fingers to open the native app controls. The
 controls also work when a server cannot load. Reload and Close app are available
@@ -75,6 +81,7 @@ On an explicitly selected test emulator with the APK installed:
 ```sh
 bun run scripts/smoke-test-android-connection.ts --serial emulator-5554
 bun run scripts/smoke-test-android-exports.ts --serial emulator-5554
+bun run scripts/smoke-test-android-device-motion.ts --serial emulator-5554
 bun run scripts/smoke-test-android-prototype.ts --serial emulator-5554 --require-tauri --require-native --attempt-backend
 ```
 

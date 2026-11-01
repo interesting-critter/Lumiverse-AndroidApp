@@ -23,6 +23,7 @@ class MainActivity : TauriActivity() {
   var connectionWebView: WebView? = null
   var nativeActive = false
   var notificationBridge: NativeNotificationBridge? = null
+  var deviceMotion: NativeDeviceMotion? = null
   var notificationNavigation: (() -> Unit)? = null
   private var permissionReply: ((Boolean) -> Unit)? = null
   private var microphoneReply: ((Boolean) -> Unit)? = null
@@ -87,7 +88,7 @@ class MainActivity : TauriActivity() {
   override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent); setIntent(intent); notificationNavigation?.invoke()
   }
-  override fun onResume() { super.onResume(); nativeActive = true; notificationBridge?.resume(); notificationNavigation?.invoke(); appUpdates.resume() }
+  override fun onResume() { super.onResume(); nativeActive = true; notificationBridge?.resume(); deviceMotion?.updateActivity(); notificationNavigation?.invoke(); appUpdates.resume() }
   override fun onWindowFocusChanged(hasFocus: Boolean) {
     super.onWindowFocusChanged(hasFocus)
     if (hasFocus) appUpdates.presentPending()
@@ -95,6 +96,7 @@ class MainActivity : TauriActivity() {
   override fun onPause() {
     appUpdates.pause()
     nativeActive = false
+    deviceMotion?.updateActivity(false)
     notificationBridge?.lifecycle(false)
     CookieManager.getInstance().flush()
     super.onPause()

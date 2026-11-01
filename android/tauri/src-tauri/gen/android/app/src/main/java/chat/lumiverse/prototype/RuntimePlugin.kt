@@ -79,6 +79,7 @@ class RuntimePlugin(private val activity: Activity) : Plugin(activity) {
                 }
             }
             it.notificationBridge = NativeNotificationBridge(it, webView)
+            it.deviceMotion = NativeDeviceMotion(it, webView)
             it.notificationNavigation = { openPendingNotification() }
         }
     }
@@ -138,6 +139,7 @@ class RuntimePlugin(private val activity: Activity) : Plugin(activity) {
         // Selection still clears its obsolete credential; the authenticated page reconciles it.
         val target = origin?.let { selected -> NativeNotifications.consumeTap(activity, activity.intent, selected, local)?.let { selected + it } } ?: url
         native?.notificationBridge?.select(url, local)
+        native?.deviceMotion?.select(url)
         downloads?.select(url)
         browserWindows?.select(url)
         entryHistoryIndex = view.copyBackForwardList().currentIndex + 1
@@ -179,6 +181,7 @@ class RuntimePlugin(private val activity: Activity) : Plugin(activity) {
                 // Preserve pending notification taps until backendReady selects it.
                 val view = webView ?: return@runOnUiThread
                 browserWindows?.select(null)
+                (activity as? MainActivity)?.deviceMotion?.select(null)
                 entryHistoryIndex = view.copyBackForwardList().currentIndex + 1
                 view.loadUrl(url)
             } }
@@ -392,7 +395,10 @@ class RuntimePlugin(private val activity: Activity) : Plugin(activity) {
         connectionHistory?.destroy(); connectionHistory = null
         downloads?.destroy(); downloads = null
         stopLocal()
-        (activity as? MainActivity)?.let { it.notificationBridge?.destroy(); it.notificationBridge = null; it.notificationNavigation = null }
+        (activity as? MainActivity)?.let {
+            it.deviceMotion?.destroy(); it.deviceMotion = null
+            it.notificationBridge?.destroy(); it.notificationBridge = null; it.notificationNavigation = null
+        }
         webView = null
     }
 }

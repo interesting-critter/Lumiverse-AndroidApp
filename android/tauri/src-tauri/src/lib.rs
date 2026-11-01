@@ -29,7 +29,7 @@ fn mobile_host_info() -> serde_json::Value {
 
 fn runtime_plugin() -> TauriPlugin<tauri::Wry> {
     Builder::new("lumiverse-runtime")
-        .js_init_script(format!("{}\n{}\n{}", "document.documentElement?.setAttribute('data-tauri-mobile', 'android'); document.documentElement?.setAttribute('data-platform', 'android'); Object.defineProperty(window, '__LUMIVERSE_MOBILE__', {value: true}); document.addEventListener('DOMContentLoaded', () => { document.documentElement.setAttribute('data-tauri-mobile', 'android'); document.documentElement.setAttribute('data-platform', 'android'); });", include_str!("downloads.js"), include_str!("connection-ready.js")))
+        .js_init_script(format!("{}\n{}\n{}\n{}", "document.documentElement?.setAttribute('data-tauri-mobile', 'android'); document.documentElement?.setAttribute('data-platform', 'android'); Object.defineProperty(window, '__LUMIVERSE_MOBILE__', {value: true}); document.addEventListener('DOMContentLoaded', () => { document.documentElement.setAttribute('data-tauri-mobile', 'android'); document.documentElement.setAttribute('data-platform', 'android'); });", include_str!("downloads.js"), include_str!("connection-ready.js"), include_str!("device-motion.js")))
         .setup(|_app, api| {
             #[cfg(target_os = "android")]
             {

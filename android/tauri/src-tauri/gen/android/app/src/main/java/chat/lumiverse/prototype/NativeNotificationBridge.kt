@@ -11,6 +11,9 @@ class NativeNotificationBridge(private val activity: MainActivity, private val v
     private var selected: String? = null
     companion object {
         private var active: WeakReference<NativeNotificationBridge>? = null
+        fun widgetsUpdated() { active?.get()?.let { bridge -> bridge.activity.runOnUiThread {
+            NativeCharacterWidgets.openPending(bridge.activity, bridge.view)
+        } } }
         fun emit(name: String) { active?.get()?.let { bridge -> bridge.activity.runOnUiThread {
             if (NativeNotifications.origin(bridge.view.url) == bridge.selected)
                 bridge.view.evaluateJavascript("window.dispatchEvent(new Event(${JSONObject.quote(name)}))", null)
@@ -20,6 +23,7 @@ class NativeNotificationBridge(private val activity: MainActivity, private val v
     fun select(url: String, local: Boolean) {
         val origin = NativeNotifications.origin(url) ?: return
         NativeNotifications.select(activity, origin, local)
+        NativeCharacterWidgets.select(activity, origin, local)
         if (selected == origin) return
         selected = origin
         if (!WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) return
@@ -42,6 +46,14 @@ class NativeNotificationBridge(private val activity: MainActivity, private val v
                 val payload = request.optJSONObject("payload") ?: JSONObject()
                 try {
                     when (request.getString("action")) {
+                        "widgets.status" -> reply(NativeCharacterWidgets.status(activity))
+                        "widgets.configure" -> {
+                            NativeCharacterWidgets.configure(activity, payload)
+                            reply(NativeCharacterWidgets.status(activity))
+                            NativeCharacterWidgets.openPending(activity, view)
+                        }
+                        "widgets.refresh" -> { CharacterWidgetWorker.request(activity); reply(true) }
+                        "widgets.invalidate" -> { NativeCharacterWidgets.invalidate(activity); reply(true) }
                         "notifications.status" -> { lifecycle(!activity.isFinishing && activity.nativeActive); reply(NativeNotifications.status(activity)) }
                         "notifications.account" -> {
                             NativeNotifications.setAccount(activity, payload.optString("accountId").takeUnless { it.isBlank() || it == "null" })

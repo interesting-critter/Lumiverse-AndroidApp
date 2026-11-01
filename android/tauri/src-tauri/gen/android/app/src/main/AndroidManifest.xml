@@ -25,6 +25,14 @@
         android:usesCleartextTraffic="${usesCleartextTraffic}">
         <meta-data android:name="firebase_messaging_auto_init_enabled" android:value="false" />
         <meta-data android:name="firebase_analytics_collection_enabled" android:value="false" />
+        <receiver android:name=".RecentCharactersWidget" android:exported="false" android:label="@string/widget_recent_label">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/recent_characters_widget" />
+        </receiver>
+        <receiver android:name=".FavoriteCharactersWidget" android:exported="false" android:label="@string/widget_favorites_label">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/favorite_characters_widget" />
+        </receiver>
         <service android:name=".LumiverseMessagingService" android:exported="false">
             <intent-filter><action android:name="com.google.firebase.MESSAGING_EVENT" /></intent-filter>
         </service>

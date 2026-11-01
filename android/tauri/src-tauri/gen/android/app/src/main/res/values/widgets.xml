@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_recent">Recent</string>
+    <string name="widget_favorites">Favorites</string>
+    <string name="widget_recent_label">Recent Characters</string>
+    <string name="widget_favorites_label">Favorite Characters</string>
+    <string name="widget_recent_description">Return to your recently chatted characters.</string>
+    <string name="widget_favorites_description">Keep your favorite characters close.</string>
+    <string name="widget_sign_in">Open Lumiverse to sign in</string>
+    <string name="widget_refresh">Open Lumiverse to refresh</string>
+    <string name="widget_no_recent">Your recent characters appear here</string>
+    <string name="widget_no_favorites">Save a favorite to see them here</string>
+    <string name="widget_open_character">Open chat with %1$s</string>
+</resources>

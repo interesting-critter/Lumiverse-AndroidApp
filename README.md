@@ -177,6 +177,18 @@ nightly controller already builds current backend `staging`. Before rollout,
 verify live Firebase delivery and an in-place upgrade over a populated existing
 install using the same signing certificate.
 
+## Home screen widgets
+
+Android includes **Recent Characters** and **Favorite Characters**, matching the iOS home screen collections. Long-press the home screen, choose Widgets, and select Lumiverse. Resize either widget for a four, eight, or sixteen character portrait grid. Tapping a character resumes their latest eligible chat, or opens the character if they have no chat yet.
+
+Widgets follow the server and account selected in the app, including **Use this device** and remote HTTP/HTTPS servers. Sign in once to enroll them. The bundled server payload and remote server must include the shared character widget frontend integration; an older server needs an update. No Firebase configuration or notification permission is required for widgets.
+
+Collections refresh after app activity and approximately every 30 minutes in the background, subject to Android's scheduling and battery restrictions. A stopped bundled server or unavailable remote server leaves the last cached collection visible. A widget tap opens the app, where the bundled server starts through the normal connection flow. Logging out or changing servers clears the old collection. Widget backgrounds and accents follow the app theme after synchronization.
+
+The native implementation uses Google's [AppWidgetProvider/RemoteViews APIs](https://developer.android.com/develop/ui/views/appwidgets), [responsive layouts](https://developer.android.com/develop/ui/views/appwidgets/layouts), and [WorkManager](https://developer.android.com/develop/background-work/background-tasks/persistent). It reuses the existing `/api/ios-widgets/v1` read-only transport for compatibility with iOS, with private cached snapshots and an Android Keystore-encrypted scoped bearer. Background refresh never starts a foreground server service.
+
+Native integration checks live in `CharacterWidgetsTest.kt`. Build with `:app:assembleUniversalDebugAndroidTest`, then run that class with AndroidJUnitRunner on an emulator or test device. The checks cover both connection modes, account isolation, invalidation races, redirects, portrait bounds, resizing, and taps across local port changes.
+
 ## Verify
 
 ```sh

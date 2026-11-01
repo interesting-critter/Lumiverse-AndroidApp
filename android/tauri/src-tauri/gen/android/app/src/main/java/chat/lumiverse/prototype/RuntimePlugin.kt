@@ -135,6 +135,7 @@ class RuntimePlugin(private val activity: Activity) : Plugin(activity) {
         val local = !remote && preferences.getString("mode", null) == "local"
         connectionHistory?.select(if (remote) url else null)
         val origin = NativeNotifications.origin(url)
+        origin?.let { NativeCharacterWidgets.captureTap(activity, activity.intent, it, local) }
         // Consume before selecting: a restarted embedded backend has a new port.
         // Selection still clears its obsolete credential; the authenticated page reconciles it.
         val target = origin?.let { selected -> NativeNotifications.consumeTap(activity, activity.intent, selected, local)?.let { selected + it } } ?: url
@@ -157,6 +158,10 @@ class RuntimePlugin(private val activity: Activity) : Plugin(activity) {
             return
         }
         val origin = NativeNotifications.origin(view.url) ?: return
+        // A cold launch first displays the packaged chooser/setup document.
+        // Keep the tap until navigate() has the actual backend origin.
+        NativeCharacterWidgets.captureTapFromPage(activity, activity.intent, origin, NativeNotifications.isLocal(activity))
+        NativeCharacterWidgets.openPending(activity, view)
         val path = NativeNotifications.consumeTap(activity, activity.intent, origin) ?: return
         val target = origin + path
         if (!NotificationPolicy.isCurrentChat(view.url, target)) view.loadUrl(target)
@@ -334,6 +339,7 @@ class RuntimePlugin(private val activity: Activity) : Plugin(activity) {
         ConnectionSessionService.stop(activity)
         stopLocal()
         NativeNotifications.clear(activity)
+        NativeCharacterWidgets.select(activity, null, false)
         navigate("$launcherUrl?changeServer=1" + if (history) "&history=1" else "")
     }
 

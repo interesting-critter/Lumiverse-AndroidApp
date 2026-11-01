@@ -96,6 +96,7 @@ rust {
 }
 
 dependencies {
+    implementation("androidx.work:work-runtime:2.10.5")
     implementation("com.google.firebase:firebase-messaging:24.1.2")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("androidx.webkit:webkit:1.14.0")
@@ -106,6 +107,8 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.4")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0")
+    androidTestImplementation("androidx.work:work-testing:2.10.5")
+    androidTestImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
 }
 
 apply(from = "tauri.build.gradle.kts")

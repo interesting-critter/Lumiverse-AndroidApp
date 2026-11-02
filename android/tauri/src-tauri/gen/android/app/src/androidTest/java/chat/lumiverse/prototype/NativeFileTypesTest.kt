@@ -63,6 +63,22 @@ class NativeFileTypesTest {
         }
     }
 
+    @Test fun themeDownloadNamesSurviveZipMimeHints() {
+        for (mime in arrayOf("application/zip", "application/octet-stream", "application/x-zip-compressed", null)) {
+            assertEquals("Starry.lumitheme", NativeFileTypes.downloadFilename("https://example.com/export", "attachment; filename=\"Starry.lumitheme\"", mime))
+            assertEquals("Starry.LUMITHEME", NativeFileTypes.downloadFilename("https://example.com/Starry.LUMITHEME?token=1", null, mime))
+        }
+    }
+
+    @Test fun portableExportMimeTypesPreserveCustomExtensions() {
+        for (filename in arrayOf("Alice.charx", "Alice.CHARX", "Starry.lumitheme", "Starry.LUMITHEME")) {
+            assertEquals("application/octet-stream", NativeFileTypes.exportMimeType(filename, "application/zip"))
+        }
+        for (filename in arrayOf("backup.zip", "theme.lumitheme.zip", "card.png", "book.json")) {
+            assertEquals("application/zip", NativeFileTypes.exportMimeType(filename, "application/zip"))
+        }
+    }
+
     @Test fun ordinaryDownloadsStillInferTheirExtensions() {
         assertEquals("card.png", NativeFileTypes.downloadFilename("https://example.com/card", null, "image/png"))
         assertEquals("backup.zip", NativeFileTypes.downloadFilename("https://example.com/backup", null, "application/zip"))

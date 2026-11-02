@@ -41,9 +41,9 @@ class NativeExportStorage(private val activity: Activity) {
 
     fun create(filename: String, requestedMimeType: String): Target {
         check(!destroyed) { "The app is closing." }
-        // Android's providers append .zip to an unrecognized .charx extension
+        // Android's providers append .zip to unrecognized portable extensions
         // when the server sends application/zip. Preserve the portable filename.
-        val mimeType = if (filename.endsWith(".charx", ignoreCase = true)) "application/octet-stream" else requestedMimeType
+        val mimeType = NativeFileTypes.exportMimeType(filename, requestedMimeType)
         val failure: Exception
         val saved = preferences.getString("folder", null)?.let(Uri::parse)
         if (saved != null) {

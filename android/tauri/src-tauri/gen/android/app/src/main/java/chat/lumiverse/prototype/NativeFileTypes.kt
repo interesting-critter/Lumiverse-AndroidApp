@@ -5,8 +5,14 @@ import android.webkit.URLUtil
 import android.webkit.WebChromeClient.FileChooserParams
 import android.webkit.MimeTypeMap
 
-/** CHARX is a ZIP container with an extension Android's MIME map does not know. */
+/** Portable ZIP containers use extensions Android's MIME map does not know. */
 internal object NativeFileTypes {
+    private fun hasPortableExtension(filename: String) =
+        filename.endsWith(".charx", ignoreCase = true) || filename.endsWith(".lumitheme", ignoreCase = true)
+
+    fun exportMimeType(filename: String, requestedMimeType: String): String =
+        if (hasPortableExtension(filename)) "application/octet-stream" else requestedMimeType
+
     fun pickerIntent(params: FileChooserParams): Intent {
         val types = params.acceptTypes.flatMap { it.split(',') }.map { it.trim().lowercase() }.filter { it.isNotEmpty() }
             .map { if (it.startsWith('.')) MimeTypeMap.getSingleton().getMimeTypeFromExtension(it.substring(1)) ?: "*/*" else it }
@@ -47,9 +53,9 @@ internal object NativeFileTypes {
 
     fun downloadFilename(url: String, disposition: String?, mimeType: String?): String {
         // URLUtil may replace or append an extension based on application/zip.
-        // Resolve once without a MIME hint to retain explicit CHARX filenames.
+        // Resolve once without a MIME hint to retain explicit portable filenames.
         val explicit = URLUtil.guessFileName(url, disposition, null)
-        return if (explicit.endsWith(".charx", ignoreCase = true)) explicit
+        return if (hasPortableExtension(explicit)) explicit
             else URLUtil.guessFileName(url, disposition, mimeType)
     }
 }

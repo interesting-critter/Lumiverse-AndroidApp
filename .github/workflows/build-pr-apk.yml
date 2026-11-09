@@ -438,20 +438,6 @@ jobs:
           print("Configured test applicationId and enabled BuildConfig")
           PY
 
-      - name: Diagnose Android BuildConfig package
-        shell: bash
-        run: |
-          echo "=== Gradle namespace and BuildConfig settings ==="
-          grep -n -E 'namespace|applicationId|buildConfig' \
-            android/tauri/src-tauri/gen/android/app/build.gradle.kts
-
-          echo "=== Logger.kt package and BuildConfig reference ==="
-          sed -n '1,100p' \
-            android/tauri/src-tauri/gen/android/app/src/main/java/chat/lumiverse/test/pr/generated/Logger.kt
-
-          echo "=== Generated BuildConfig files ==="
-          find android/tauri/src-tauri/gen/android -iname '*BuildConfig*' -print
-
       - name: Build APK
         run: bun run build:android-tauri
 

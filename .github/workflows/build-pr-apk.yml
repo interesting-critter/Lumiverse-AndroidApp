@@ -214,6 +214,27 @@ jobs:
           print("SHA256:", package["SHA256"])
           PY
 
+      - name: Verify Termux package download
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          data = json.loads(
+              Path("android/native/termux-aarch64.json").read_text()
+          )
+
+          package = next(
+              p for p in data["packages"]
+              if p["Package"] == "libnghttp2"
+          )
+
+          print("Version:", package["Version"])
+          print("Filename:", package["Filename"])
+          print("SHA256:", package["SHA256"])
+          print("Repository:", data["repository"])
+          PY
+          
       - name: Cache Android native build outputs
         uses: actions/cache@v4
         with:

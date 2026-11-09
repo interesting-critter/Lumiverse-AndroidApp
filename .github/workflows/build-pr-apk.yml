@@ -379,11 +379,50 @@ jobs:
           print("Preserved namespace:", match.group(1))
           PY
 
+      - name: Preserve custom Android Kotlin sources
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          SOURCE="android/tauri/src-tauri/gen/android/app/src/main/java/chat/lumiverse/prototype"
+          BACKUP=".tmp/android-custom-sources/prototype"
+
+          if [ ! -d "$SOURCE" ]; then
+            echo "::error::Custom Android Kotlin source directory is missing: $SOURCE"
+            exit 1
+          fi
+
+          mkdir -p "$(dirname "$BACKUP")"
+          cp -a "$SOURCE" "$BACKUP"
+
+          echo "Preserved custom Kotlin files:"
+          find "$BACKUP" -maxdepth 1 -name '*.kt' -print
+
       - name: Reinitialize Android project for test application ID
         run: |
           rm -rf android/tauri/src-tauri/gen/android
           bunx tauri android init
 
+      - name: Restore custom Android Kotlin sources
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          DEST="android/tauri/src-tauri/gen/android/app/src/main/java/chat/lumiverse/prototype"
+
+          mkdir -p "$DEST"
+          cp -a .tmp/android-custom-sources/prototype/. "$DEST/"
+
+          echo "Restored custom Kotlin sources:"
+          find "$DEST" -maxdepth 1 -name '*.kt' -print
+
+          if [ ! -f "$DEST/RuntimePlugin.kt" ]; then
+            echo "::error::RuntimePlugin.kt was not restored"
+            exit 1
+          fi
+
+          grep -n '^package ' "$DEST/RuntimePlugin.kt"
+          
       - name: Configure generated Android application ID
         shell: bash
         run: |

@@ -310,8 +310,8 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            ~/.gradle/caches
-            ~/.gradle/wrapper
+            .tmp/gradle/caches
+            .tmp/gradle/wrapper
             .tmp/android-native
           key: ${{ runner.os }}-android-native-rust197-ndk28c-${{ hashFiles('backend-source.json', 'android/native/termux-aarch64.json', 'android/native/ffmpeg-aarch64.json', 'android/native/git-aarch64.json', 'android/native/object-store-android.rs', '**/Cargo.lock', 'scripts/build-*-android-native.ts') }}
           restore-keys: |
@@ -333,8 +333,8 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            ~/.gradle/caches
-            ~/.gradle/wrapper
+            .tmp/gradle/caches
+            .tmp/gradle/wrapper
             .tmp/android-native
           key: ${{ runner.os }}-android-native-rust197-ndk28c-${{ hashFiles('backend-source.json', 'android/native/termux-aarch64.json', 'android/native/ffmpeg-aarch64.json', 'android/native/git-aarch64.json', 'android/native/object-store-android.rs', '**/Cargo.lock', 'scripts/build-*-android-native.ts') }}
 
@@ -384,6 +384,18 @@ jobs:
 
           print('Set android:extractNativeLibs="true"')
           PY
+
+      - name: Restore Android APK compilation cache
+        id: apk-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            android/tauri/src-tauri/gen/android/app/build
+            android/tauri/src-tauri/gen/android/build
+            .tmp/gradle/daemon
+          key: ${{ runner.os }}-android-apk-${{ hashFiles('android/tauri/src-tauri/**/*.kt', 'android/tauri/src-tauri/**/*.kts', 'android/tauri/src-tauri/**/*.gradle', 'android/tauri/src-tauri/**/*.xml', 'android/tauri/src-tauri/**/*.json', 'android/tauri/src-tauri/Cargo.toml', 'android/tauri/src-tauri/Cargo.lock', 'package.json', 'bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-android-apk-
 
       - name: Build APK
         run: bun run build:android-tauri

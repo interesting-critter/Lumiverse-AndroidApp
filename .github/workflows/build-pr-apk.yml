@@ -480,6 +480,28 @@ jobs:
       - name: Build APK
         run: bun run build:android-tauri
 
+      - name: Diagnose Tauri runtime package
+        if: always()
+        shell: bash
+        run: |
+          echo "=== Tauri configuration ==="
+          grep -n -E '"identifier"|RuntimePlugin|WRY_ANDROID_PACKAGE' \
+            android/tauri/src-tauri/tauri.conf.json || true
+
+          echo "=== Gradle package settings ==="
+          grep -n -E 'namespace|applicationId' \
+            android/tauri/src-tauri/gen/android/app/build.gradle.kts || true
+
+          echo "=== RuntimePlugin references and declarations ==="
+          grep -R -n -E 'RuntimePlugin|getAppClass|WRY_ANDROID_PACKAGE' \
+            android/tauri/src-tauri \
+            --exclude-dir=build \
+            --exclude='*.so' || true
+
+          echo "=== Generated Kotlin package declarations ==="
+          find android/tauri/src-tauri/gen/android/app/src/main \
+            -name '*.kt' -exec grep -H '^package ' {} \; || true
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:

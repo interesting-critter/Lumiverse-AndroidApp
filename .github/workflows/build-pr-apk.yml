@@ -154,7 +154,7 @@ jobs:
           import urllib.request
           from pathlib import Path
 
-          repository = "https://packages-cf.termux.dev/apt/termux-main/"
+          repository = "https://ftp.fau.de/termux/termux-main"
           index_url = repository + "dists/stable/main/binary-aarch64/Packages"
 
           request = urllib.request.Request(
@@ -236,6 +236,7 @@ jobs:
           PY
           
       - name: Cache Android native build outputs
+        id: native-cache
         uses: actions/cache@v4
         with:
           path: |
@@ -250,6 +251,18 @@ jobs:
 
       - name: Build Android native dependencies
         run: bun run build:android-native
+
+      - name: Save Android native build cache
+        if: always() && steps.native-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            .tmp/android-native
+          key: ${{ runner.os }}-android-native-rust197-ndk28c-${{ hashFiles('backend-source.json', 'android/native/termux-aarch64.json', 'android/native/object-store-android.rs', '**/Cargo.lock', 'scripts/build-*-android-native.ts') }}
 
       - name: Build APK
         run: bun run build:android-tauri

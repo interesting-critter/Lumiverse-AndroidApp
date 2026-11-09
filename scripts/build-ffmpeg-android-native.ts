@@ -24,13 +24,21 @@ await Promise.all(Array.from({ length: 8 }, async () => {
 }));
 mkdirSync(sysroot, { recursive: true });
 for (const pkg of lock.packages) {
-  const unpacked = join(cache, "deb", pkg.Package), complete = join(unpacked, ".complete");
-  if (existsSync(complete) && readFileSync(complete, "utf8") === pkg.SHA256) continue;
+  const unpacked = join(cache, "deb-merged", pkg.Package);
+  const complete = join(unpacked, ".complete");
+
+  if (
+    existsSync(complete) &&
+    readFileSync(complete, "utf8") === pkg.SHA256
+  ) continue;
+
   mkdirSync(unpacked, { recursive: true });
-  await run(["tar", "-xf", join(downloads, pkg.Filename.split("/").at(-1)!), "-C", unpacked]);
-  const archive = readdirSync(unpacked).find(name => name.startsWith("data.tar."));
-  if (!archive) throw new Error(`Missing package archive: ${pkg.Package}`);
-  await run(["tar", "-xf", join(unpacked, archive), "-C", sysroot]);
+
+  const deb = join(downloads, pkg.Filename.split("/").at(-1)!);
+
+  await run(["dpkg-deb", "-x", deb, unpacked]);
+  await run(["cp", "-a", `${unpacked}/.`, sysroot]);
+
   writeFileSync(complete, pkg.SHA256);
 }
 // Sharp's NDK-built WebP is shared with FFmpeg. Never reintroduce the old 4 KiB binaries.

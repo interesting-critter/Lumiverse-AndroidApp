@@ -111,21 +111,6 @@ jobs:
       - name: Install Android app dependencies
         run: bun install --frozen-lockfile
 
-      - name: Configure test application identifier
-        run: |
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-
-          config = Path("android/tauri/src-tauri/tauri.conf.json")
-          data = json.loads(config.read_text())
-          data["identifier"] = "chat.lumiverse.test.pr"
-          config.write_text(json.dumps(data, indent=2) + "\n")
-
-          # Firebase configuration belongs to the original application ID.
-          Path("android/firebase/google-services.json").unlink(missing_ok=True)
-          PY
-
       - name: Refresh Termux ARM64 package metadata
         run: |
           python3 - <<'PY'
@@ -353,134 +338,18 @@ jobs:
             .tmp/android-native
           key: ${{ runner.os }}-android-native-rust197-ndk28c-${{ hashFiles('backend-source.json', 'android/native/termux-aarch64.json', 'android/native/ffmpeg-aarch64.json', 'android/native/git-aarch64.json', 'android/native/object-store-android.rs', '**/Cargo.lock', 'scripts/build-*-android-native.ts') }}
 
-      - name: Preserve original Android namespace
+      - name: Restore original application identifier
         run: |
           python3 - <<'PY'
-          import re
+          import json
           from pathlib import Path
 
-          gradle = Path(
-              "android/tauri/src-tauri/gen/android/app/build.gradle.kts"
-          )
+          config = Path("android/tauri/src-tauri/tauri.conf.json")
+          data = json.loads(config.read_text())
+          data["identifier"] = "chat.lumiverse.prototype"
+          config.write_text(json.dumps(data, indent=2) + "\n")
 
-          if not gradle.exists():
-              raise SystemExit(f"Expected generated Gradle file: {gradle}")
-
-          source = gradle.read_text()
-          match = re.search(r'(?m)^\s*namespace\s*=\s*"([^"]+)"', source)
-
-          if not match:
-              raise SystemExit("Could not find original Android namespace")
-
-          output = Path(".tmp/original-android-namespace.txt")
-          output.parent.mkdir(parents=True, exist_ok=True)
-          output.write_text(match.group(1))
-
-          print("Preserved namespace:", match.group(1))
-          PY
-
-      - name: Preserve custom Android Kotlin sources
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          SOURCE="android/tauri/src-tauri/gen/android/app/src/main/java/chat/lumiverse/prototype"
-          BACKUP=".tmp/android-custom-sources/prototype"
-
-          if [ ! -d "$SOURCE" ]; then
-            echo "::error::Custom Android Kotlin source directory is missing: $SOURCE"
-            exit 1
-          fi
-
-          mkdir -p "$(dirname "$BACKUP")"
-          cp -a "$SOURCE" "$BACKUP"
-
-          echo "Preserved custom Kotlin files:"
-          find "$BACKUP" -maxdepth 1 -name '*.kt' -print
-
-      - name: Reinitialize Android project for test application ID
-        run: |
-          rm -rf android/tauri/src-tauri/gen/android
-          bunx tauri android init
-
-      - name: Restore custom Android Kotlin sources
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          DEST="android/tauri/src-tauri/gen/android/app/src/main/java/chat/lumiverse/prototype"
-
-          mkdir -p "$DEST"
-          cp -a .tmp/android-custom-sources/prototype/. "$DEST/"
-
-          echo "Restored custom Kotlin sources:"
-          find "$DEST" -maxdepth 1 -name '*.kt' -print
-
-          if [ ! -f "$DEST/RuntimePlugin.kt" ]; then
-            echo "::error::RuntimePlugin.kt was not restored"
-            exit 1
-          fi
-
-          grep -n '^package ' "$DEST/RuntimePlugin.kt"
-          
-      - name: Configure generated Android application ID
-        shell: bash
-        run: |
-          python3 - <<'PY'
-          import re
-          from pathlib import Path
-
-          gradle = Path("android/tauri/src-tauri/gen/android/app/build.gradle.kts")
-          source = gradle.read_text()
-
-          package_id = "chat.lumiverse.test.pr"
-
-          source, namespace_count = re.subn(
-              r'(?m)^(\s*namespace\s*=\s*)"[^"]+"',
-              lambda m: m.group(1) + f'"{package_id}"',
-              source,
-              count=1
-          )
-
-          source, app_count = re.subn(
-              r'(?m)^(\s*applicationId\s*=\s*)"[^"]+"',
-              lambda m: m.group(1) + f'"{package_id}"',
-              source,
-              count=1
-          )
-
-          if namespace_count != 1:
-              raise SystemExit("Could not set Android namespace")
-          if app_count != 1:
-              raise SystemExit("Could not set Android applicationId")
-
-          # Ensure BuildConfig generation is enabled exactly once.
-          source = re.sub(
-              r'(?m)^\s*buildConfig\s*=\s*true\s*\n',
-              '',
-              source
-          )
-
-          if re.search(r'buildFeatures\s*\{', source):
-              source = re.sub(
-                  r'buildFeatures\s*\{',
-                  'buildFeatures {\n        buildConfig = true',
-                  source,
-                  count=1
-              )
-          else:
-              source, count = re.subn(
-                  r'(?m)^(\s*)buildTypes\s*\{',
-                  r'\1buildFeatures {\n\1    buildConfig = true\n\1}\n\n\1buildTypes {',
-                  source,
-                  count=1
-              )
-              if count != 1:
-                  raise SystemExit("Could not add buildFeatures block")
-
-          gradle.write_text(source)
-          print("Configured namespace, applicationId and BuildConfig:")
-          print(package_id)
+          print("Application identifier:", data["identifier"])
           PY
 
       - name: Enable Android native library extraction

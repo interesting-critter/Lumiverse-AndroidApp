@@ -1,4 +1,4 @@
-package chat.lumiverse.test;
+package chat.lumiverse.prototype;
 
 import java.util.ArrayList;
 import java.util.List;

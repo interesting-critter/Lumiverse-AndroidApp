@@ -1,4 +1,4 @@
-package chat.lumiverse.test;
+package chat.lumiverse.prototype;
 
 import java.util.LinkedHashSet;
 import java.util.Set;

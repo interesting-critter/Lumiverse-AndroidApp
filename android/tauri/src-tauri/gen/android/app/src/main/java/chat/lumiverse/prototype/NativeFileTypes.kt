@@ -1,4 +1,4 @@
-package chat.lumiverse.test
+package chat.lumiverse.prototype
 
 import android.content.Intent
 import android.webkit.URLUtil

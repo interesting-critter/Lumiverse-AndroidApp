@@ -1,4 +1,4 @@
-package chat.lumiverse.test
+package chat.lumiverse.prototype
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.*

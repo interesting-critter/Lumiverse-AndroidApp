@@ -10,7 +10,7 @@ const serial = process.argv[process.argv.indexOf('--serial') + 1]
 if (!serial?.startsWith('emulator-')) throw new Error('Select a test emulator with --serial emulator-PORT')
 const { detectCharacterImportFormat, extractCardFromCharx } = await import(join(backendRoot(), 'src/services/character-card.service.ts'))
 const adb = join(process.env.ANDROID_HOME || join(process.env.HOME!, 'Library/Android/sdk'), 'platform-tools/adb')
-const app = 'chat.lumiverse.test'
+const app = 'chat.lumiverse.prototype'
 const prefix = `lumiverse-export-smoke-${Date.now()}`
 const storageRecovery = process.argv.includes('--storage-recovery')
 const recoveryFolder = `Lumiverse-Test-${Date.now()}`

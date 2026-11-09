@@ -37,7 +37,7 @@ val firebaseConfig = firebaseConfigFile.takeIf { it.isFile }?.let {
 android {
     compileSdk = 36
     buildToolsVersion = "36.1.0"
-    namespace = "chat.lumiverse.test"
+    namespace = "chat.lumiverse.prototype"
     defaultConfig {
         manifestPlaceholders["usesCleartextTraffic"] = "false"
         applicationId = "chat.lumiverse.test"

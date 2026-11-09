@@ -1,4 +1,4 @@
-package chat.lumiverse.test
+package chat.lumiverse.prototype
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager

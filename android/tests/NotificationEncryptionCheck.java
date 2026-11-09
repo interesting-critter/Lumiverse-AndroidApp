@@ -1,4 +1,4 @@
-package chat.lumiverse.test;
+package chat.lumiverse.prototype;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;

@@ -1,4 +1,4 @@
-package chat.lumiverse.test;
+package chat.lumiverse.prototype;
 
 import java.net.URI;
 

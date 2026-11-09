@@ -27,7 +27,7 @@ try {
   const compat = await buildAndroidBunCompat(staging);
   await run([join(llvm, "aarch64-linux-android29-clang"), "-std=c11", "-O2", "-Wall", "-Wextra", "-Werror",
     "-Wl,-z,max-page-size=16384", join(root, "android/native/tests/install-seccomp.c"), "-o", join(staging, "install-seccomp")]);
-  const installed = (await run(device("shell", "pm", "path", "chat.lumiverse.test"))).stdout.trim().replace(/^package:/, "");
+  const installed = (await run(device("shell", "pm", "path", "chat.lumiverse.prototype"))).stdout.trim().replace(/^package:/, "");
   assert.ok(installed.endsWith("/base.apk"));
   const bun = installed.replace(/base\.apk$/, "lib/arm64/libbun.so");
   const bunVersion = (await run(device("shell", bun, "--version"))).stdout.trim();

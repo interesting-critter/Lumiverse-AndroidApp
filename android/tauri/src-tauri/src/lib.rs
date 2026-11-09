@@ -34,7 +34,7 @@ fn runtime_plugin() -> TauriPlugin<tauri::Wry> {
             #[cfg(target_os = "android")]
             {
                 use tauri::Manager;
-                let handle = api.register_android_plugin("chat.lumiverse.test", "RuntimePlugin")?;
+                let handle = api.register_android_plugin("chat.lumiverse.prototype", "RuntimePlugin")?;
                 _app.manage(RuntimeHandle(handle));
             }
             Ok(())

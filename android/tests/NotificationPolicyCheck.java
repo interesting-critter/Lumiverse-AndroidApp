@@ -1,4 +1,4 @@
-package chat.lumiverse.test;
+package chat.lumiverse.prototype;
 
 public class NotificationPolicyCheck {
     static void equal(String actual, String expected) {

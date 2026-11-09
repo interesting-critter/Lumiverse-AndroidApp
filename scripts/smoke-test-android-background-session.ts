@@ -11,7 +11,7 @@ if (!serial?.startsWith('emulator-')) throw new Error('Select a disposable emula
 const baseline = process.argv.includes('--baseline')
 const seconds = Number(option('--seconds') || 75)
 assert.ok(seconds >= 60 && seconds <= 600, 'Use at least one minute per background phase')
-const app = 'chat.lumiverse.test'
+const app = 'chat.lumiverse.prototype'
 const adb = join(process.env.ANDROID_HOME || join(process.env.HOME!, 'Library/Android/sdk'), 'platform-tools/adb')
 async function command(...args: string[]) {
   const child = Bun.spawn([adb, '-s', serial!, ...args], { stdout: 'pipe', stderr: 'pipe' })

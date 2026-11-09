@@ -1,4 +1,4 @@
-package chat.lumiverse.test
+package chat.lumiverse.prototype
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -79,7 +79,7 @@ class ConnectionSessionService : Service() {
     companion object {
         private const val CHANNEL = "lumiverse-active-connections"
         private const val NOTIFICATION = 23019
-        private const val CLOSE_SESSION = "chat.lumiverse.test.CLOSE_SESSION"
+        private const val CLOSE_SESSION = "chat.lumiverse.prototype.CLOSE_SESSION"
         var active = false
             private set
         var onFailure: ((String) -> Unit)? = null

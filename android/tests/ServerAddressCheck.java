@@ -1,4 +1,4 @@
-package chat.lumiverse.test;
+package chat.lumiverse.prototype;
 
 public final class ServerAddressCheck {
     public static void main(String[] args) {

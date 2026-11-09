@@ -7,7 +7,7 @@ import { audioSmokeFixture, nativeAudioSmokeBundle } from './native-audio-smoke'
 const serial = process.argv[process.argv.indexOf('--serial') + 1]
 if (!serial?.startsWith('emulator-')) throw new Error('Select a test emulator with --serial emulator-PORT')
 const adb = join(process.env.ANDROID_HOME || join(process.env.HOME!, 'Library/Android/sdk'), 'platform-tools/adb')
-const app = 'chat.lumiverse.test'
+const app = 'chat.lumiverse.prototype'
 async function command(...args: string[]) {
   const result = Bun.spawnSync([adb, '-s', serial, ...args])
   if (result.exitCode) throw new Error(result.stderr.toString() || result.stdout.toString())

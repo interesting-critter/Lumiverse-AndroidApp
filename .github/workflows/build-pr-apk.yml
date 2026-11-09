@@ -444,6 +444,39 @@ jobs:
           print(package_id)
           PY
 
+      - name: Enable Android native library extraction
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+
+          manifest = Path(
+              "android/tauri/src-tauri/gen/android/app/src/main/AndroidManifest.xml"
+          )
+          source = manifest.read_text()
+
+          app_match = re.search(r'<application\b[^>]*>', source)
+          if not app_match:
+              raise SystemExit("Could not find application element in AndroidManifest.xml")
+
+          app_tag = app_match.group(0)
+
+          if re.search(r'android:extractNativeLibs\s*=', app_tag):
+              app_tag = re.sub(
+                  r'android:extractNativeLibs\s*=\s*"[^"]*"',
+                  'android:extractNativeLibs="true"',
+                  app_tag
+              )
+          else:
+              app_tag = app_tag[:-1] + ' android:extractNativeLibs="true">'
+
+          source = source[:app_match.start()] + app_tag + source[app_match.end():]
+          manifest.write_text(source)
+
+          print('Set android:extractNativeLibs="true"')
+          PY
+
       - name: Build APK
         run: bun run build:android-tauri
 

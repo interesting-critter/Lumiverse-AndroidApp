@@ -394,29 +394,34 @@ jobs:
           gradle = Path("android/tauri/src-tauri/gen/android/app/build.gradle.kts")
           source = gradle.read_text()
 
-          namespace_file = Path(".tmp/original-android-namespace.txt")
-          original_namespace = namespace_file.read_text().strip()
+          package_id = "chat.lumiverse.test.pr"
 
-          # Preserve the original namespace.
-          source, count = re.subn(
+          source, namespace_count = re.subn(
               r'(?m)^(\s*namespace\s*=\s*)"[^"]+"',
-              lambda m: m.group(1) + f'"{original_namespace}"',
+              lambda m: m.group(1) + f'"{package_id}"',
               source,
               count=1
           )
-          if count != 1:
-              raise SystemExit("Could not restore original Android namespace")
 
-          # Set the separate test application ID.
-          old = 'applicationId = "chat.lumiverse.test"'
-          new = 'applicationId = "chat.lumiverse.test.pr"'
+          source, app_count = re.subn(
+              r'(?m)^(\s*applicationId\s*=\s*)"[^"]+"',
+              lambda m: m.group(1) + f'"{package_id}"',
+              source,
+              count=1
+          )
 
-          if new not in source:
-              if old not in source:
-                  raise SystemExit("Could not find the expected applicationId")
-              source = source.replace(old, new, 1)
+          if namespace_count != 1:
+              raise SystemExit("Could not set Android namespace")
+          if app_count != 1:
+              raise SystemExit("Could not set Android applicationId")
 
-          # Ensure BuildConfig is generated.
+          # Ensure BuildConfig generation is enabled exactly once.
+          source = re.sub(
+              r'(?m)^\s*buildConfig\s*=\s*true\s*\n',
+              '',
+              source
+          )
+
           if re.search(r'buildFeatures\s*\{', source):
               source = re.sub(
                   r'buildFeatures\s*\{',
@@ -432,10 +437,11 @@ jobs:
                   count=1
               )
               if count != 1:
-                  raise SystemExit("Could not insert buildFeatures block")
+                  raise SystemExit("Could not add buildFeatures block")
 
           gradle.write_text(source)
-          print("Configured test applicationId and enabled BuildConfig")
+          print("Configured namespace, applicationId and BuildConfig:")
+          print(package_id)
           PY
 
       - name: Build APK

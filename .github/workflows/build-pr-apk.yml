@@ -147,22 +147,75 @@ jobs:
           path: .tmp/android-prototype/debug.keystore
           key: lumiverse-pr-debug-keystore-v1
 
-      - name: Use working Termux package mirror
+      - name: Refresh Termux libnghttp2 package pin
         run: |
           python3 - <<'PY'
           import json
+          import urllib.request
           from pathlib import Path
+
+          repository = "https://packages-cf.termux.dev/apt/termux-main/"
+          index_url = repository + "dists/stable/main/binary-aarch64/Packages"
+
+          print("Fetching current Termux ARM64 package metadata...")
+          with urllib.request.urlopen(index_url, timeout=60) as response:
+              index = response.read().decode()
+
+          package = None
+          for stanza in index.split("\n\n"):
+              fields = {}
+              for line in stanza.splitlines():
+                  if line.startswith((" ", "\t")):
+                      continue
+                  key, separator, value = line.partition(": ")
+                  if separator:
+                      fields[key] = value.strip()
+
+              if fields.get("Package") == "libnghttp2":
+                  package = fields
+                  break
+
+          if not package:
+              raise SystemExit("libnghttp2 not found in Termux ARM64 package index")
+
+          required = ("Version", "Filename", "SHA256")
+          if any(not package.get(field) for field in required):
+              raise SystemExit("Incomplete libnghttp2 package metadata")
 
           path = Path("android/native/termux-aarch64.json")
           data = json.loads(path.read_text())
+          data["repository"] = repository
 
-          data["repository"] = (
-              "https://packages-cf.termux.dev/apt/termux-main/"
+          entry = next(
+              (p for p in data["packages"] if p["Package"] == "libnghttp2"),
+              None
           )
+          if not entry:
+              raise SystemExit("libnghttp2 missing from project package lock")
+
+          for field in required:
+              entry[field] = package[field]
 
           path.write_text(json.dumps(data, indent=2) + "\n")
-          print("Updated Termux package mirror:", data["repository"])
+
+          print("Updated libnghttp2 pin:")
+          print("Version:", package["Version"])
+          print("Filename:", package["Filename"])
+          print("SHA256:", package["SHA256"])
           PY
+
+      - name: Cache Android native build outputs
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            .tmp/android-native
+          key: ${{ runner.os }}-android-native-rust197-ndk28c-${{ hashFiles('backend-source.json', 'android/native/termux-aarch64.json', 'android/native/object-store-android.rs', '**/Cargo.lock', 'scripts/build-*-android-native.ts') }}
+          restore-keys: |
+            ${{ runner.os }}-android-native-rust197-ndk28c-
 
       - name: Build Android native dependencies
         run: bun run build:android-native

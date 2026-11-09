@@ -1,6 +1,6 @@
 {
   "format": 1,
-  "repository": "https://packages.termux.dev/apt/termux-main/",
+  "repository": "https://ftp.fau.de/termux/termux-main",
   "packages": [
     {
       "Package": "libvips",

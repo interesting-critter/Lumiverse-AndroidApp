@@ -1,4 +1,3 @@
-
 name: Build Lumiverse PR APK
 
 on:
@@ -112,7 +111,7 @@ jobs:
       - name: Install Android app dependencies
         run: bun install --frozen-lockfile
 
-      - name: Configure separate test application ID
+      - name: Configure test application identifier
         run: |
           python3 - <<'PY'
           import json
@@ -123,29 +122,9 @@ jobs:
           data["identifier"] = "chat.lumiverse.test.pr"
           config.write_text(json.dumps(data, indent=2) + "\n")
 
-          gradle = Path(
-              "android/tauri/src-tauri/gen/android/app/build.gradle.kts"
-          )
-          source = gradle.read_text()
-
-          old = 'applicationId = "chat.lumiverse.test"'
-          new = 'applicationId = "chat.lumiverse.test.pr"'
-
-          if old not in source:
-              raise SystemExit("Original applicationId not found")
-
-          gradle.write_text(source.replace(old, new))
-
-          # The bundled Firebase configuration is registered to the
-          # original app ID. Omit it from this separate test installation.
+          # Firebase configuration belongs to the original application ID.
           Path("android/firebase/google-services.json").unlink(missing_ok=True)
           PY
-
-      - name: Restore test signing key
-        uses: actions/cache@v4
-        with:
-          path: .tmp/android-prototype/debug.keystore
-          key: lumiverse-pr-debug-keystore-v1
 
       - name: Refresh Termux ARM64 package metadata
         run: |
@@ -156,10 +135,11 @@ jobs:
           from pathlib import Path
 
           base = "https://ftp.fau.de/termux/termux-main/"
-          index_url = base + "/dists/stable/main/binary-aarch64/Packages.gz"
+          index_url = base + "dists/stable/main/binary-aarch64/Packages.gz"
           lock_path = Path("android/native/termux-aarch64.json")
 
           print(f"Fetching package index: {index_url}")
+
           request = urllib.request.Request(
               index_url,
               headers={"User-Agent": "Mozilla/5.0"}
@@ -168,75 +148,40 @@ jobs:
           with urllib.request.urlopen(request, timeout=60) as response:
               index_data = gzip.decompress(response.read()).decode("utf-8")
 
-          # Parse Debian package-index entries.
           available = {}
+
           for paragraph in index_data.split("\n\n"):
               fields = {}
+
               for line in paragraph.splitlines():
                   if line and not line[0].isspace() and ":" in line:
                       key, value = line.split(":", 1)
                       fields[key] = value.strip()
+
               if "Package" in fields:
                   available[fields["Package"]] = fields
 
           lock = json.loads(lock_path.read_text())
-          updated = []
 
           for package in lock["packages"]:
               name = package["Package"]
+
               if name not in available:
                   raise SystemExit(f"Package missing from mirror index: {name}")
 
               entry = available[name]
+
               for field in ("Version", "Filename", "SHA256"):
                   if field not in entry:
                       raise SystemExit(f"{name}: index is missing {field}")
-                  package[field] = entry[field]
 
-              updated.append(f'{name} -> {entry["Version"]}')
+                  package[field] = entry[field]
 
           lock["repository"] = base
           lock_path.write_text(json.dumps(lock, indent=2) + "\n")
 
-          print("Updated locked packages:")
-          for item in updated:
-              print("  " + item)
+          print(f"Refreshed {len(lock['packages'])} Termux packages.")
           PY
-
-      - name: Verify Termux package download
-        run: |
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-
-          data = json.loads(
-              Path("android/native/termux-aarch64.json").read_text()
-          )
-
-          package = next(
-              p for p in data["packages"]
-              if p["Package"] == "libnghttp2"
-          )
-
-          print("Version:", package["Version"])
-          print("Filename:", package["Filename"])
-          print("SHA256:", package["SHA256"])
-          print("Repository:", data["repository"])
-          PY
-          
-      - name: Cache Android native build outputs
-        id: native-cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-            .tmp/android-native
-          key: ${{ runner.os }}-android-native-rust197-ndk28c-${{ hashFiles('backend-source.json', 'android/native/termux-aarch64.json', 'android/native/object-store-android.rs', '**/Cargo.lock', 'scripts/build-*-android-native.ts', 'android/native/ffmpeg-aarch64.json', 'android/native/git-aarch64.json') }}
-          restore-keys: |
-            ${{ runner.os }}-android-native-rust197-ndk28c-
 
       - name: Refresh FFmpeg package lock
         run: |
@@ -257,13 +202,14 @@ jobs:
               headers={"User-Agent": "Mozilla/5.0"}
           )
 
-          with urllib.request.urlopen(request) as response:
+          with urllib.request.urlopen(request, timeout=60) as response:
               content = gzip.decompress(response.read()).decode()
 
           packages = {}
 
           for paragraph in content.split("\n\n"):
               entry = {}
+
               for line in paragraph.splitlines():
                   if line and not line[0].isspace() and ": " in line:
                       key, value = line.split(": ", 1)
@@ -280,9 +226,13 @@ jobs:
                       f"Package missing from mirror index: {pkg['Package']}"
                   )
 
-              pkg["Version"] = current["Version"]
-              pkg["Filename"] = current["Filename"]
-              pkg["SHA256"] = current["SHA256"]
+              for field in ("Version", "Filename", "SHA256"):
+                  if field not in current:
+                      raise SystemExit(
+                          f"{pkg['Package']}: missing {field} in package index"
+                      )
+
+                  pkg[field] = current[field]
 
           lock["repository"] = base
           lock_path.write_text(json.dumps(lock, indent=2) + "\n")
@@ -309,13 +259,14 @@ jobs:
               headers={"User-Agent": "Mozilla/5.0"}
           )
 
-          with urllib.request.urlopen(request) as response:
+          with urllib.request.urlopen(request, timeout=60) as response:
               content = gzip.decompress(response.read()).decode()
 
           packages = {}
 
           for paragraph in content.split("\n\n"):
               entry = {}
+
               for line in paragraph.splitlines():
                   if line and not line[0].isspace() and ": " in line:
                       key, value = line.split(": ", 1)
@@ -332,21 +283,66 @@ jobs:
                       f"Package missing from mirror index: {pkg['Package']}"
                   )
 
-              pkg["Version"] = current["Version"]
-              pkg["Filename"] = current["Filename"]
-              pkg["SHA256"] = current["SHA256"]
+              for field in ("Version", "Filename", "SHA256"):
+                  if field not in current:
+                      raise SystemExit(
+                          f"{pkg['Package']}: missing {field} in package index"
+                      )
+
+                  pkg[field] = current[field]
 
           lock["repository"] = base
           lock_path.write_text(json.dumps(lock, indent=2) + "\n")
 
           print(f"Refreshed {len(lock['packages'])} Git package entries.")
           PY
-          
+
+      - name: Verify Termux package metadata
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          data = json.loads(
+              Path("android/native/termux-aarch64.json").read_text()
+          )
+
+          package = next(
+              p for p in data["packages"]
+              if p["Package"] == "libnghttp2"
+          )
+
+          print("Version:", package["Version"])
+          print("Filename:", package["Filename"])
+          print("SHA256:", package["SHA256"])
+          print("Repository:", data["repository"])
+          PY
+
+      - name: Cache Android native build outputs
+        id: native-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            .tmp/android-native
+          key: ${{ runner.os }}-android-native-rust197-ndk28c-${{ hashFiles('backend-source.json', 'android/native/termux-aarch64.json', 'android/native/ffmpeg-aarch64.json', 'android/native/git-aarch64.json', 'android/native/object-store-android.rs', '**/Cargo.lock', 'scripts/build-*-android-native.ts') }}
+          restore-keys: |
+            ${{ runner.os }}-android-native-rust197-ndk28c-
+
+      - name: Restore test signing key
+        uses: actions/cache@v4
+        with:
+          path: .tmp/android-prototype/debug.keystore
+          key: lumiverse-pr-debug-keystore-v1
+
       - name: Build Android native dependencies
         run: bun run build:android-native
 
       - name: Save Android native build cache
-        if: always() && steps.native-cache.outputs.cache-hit != 'true'
+        if: success() && steps.native-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
           path: |
@@ -355,7 +351,81 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
             .tmp/android-native
-          key: ${{ runner.os }}-android-native-rust197-ndk28c-${{ hashFiles('backend-source.json', 'android/native/termux-aarch64.json', 'android/native/object-store-android.rs', '**/Cargo.lock', 'scripts/build-*-android-native.ts', 'android/native/ffmpeg-aarch64.json', 'android/native/git-aarch64.json') }}
+          key: ${{ runner.os }}-android-native-rust197-ndk28c-${{ hashFiles('backend-source.json', 'android/native/termux-aarch64.json', 'android/native/ffmpeg-aarch64.json', 'android/native/git-aarch64.json', 'android/native/object-store-android.rs', '**/Cargo.lock', 'scripts/build-*-android-native.ts') }}
+
+      - name: Preserve original Android namespace
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+
+          gradle = Path(
+              "android/tauri/src-tauri/gen/android/app/build.gradle.kts"
+          )
+
+          if not gradle.exists():
+              raise SystemExit(f"Expected generated Gradle file: {gradle}")
+
+          source = gradle.read_text()
+          match = re.search(r'(?m)^\s*namespace\s*=\s*"([^"]+)"', source)
+
+          if not match:
+              raise SystemExit("Could not find original Android namespace")
+
+          output = Path(".tmp/original-android-namespace.txt")
+          output.parent.mkdir(parents=True, exist_ok=True)
+          output.write_text(match.group(1))
+
+          print("Preserved namespace:", match.group(1))
+          PY
+
+      - name: Reinitialize Android project for test application ID
+        run: |
+          rm -rf android/tauri/src-tauri/gen/android
+          bunx tauri android init
+
+      - name: Configure generated Android application ID
+        run: |
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+
+          gradle = Path(
+              "android/tauri/src-tauri/gen/android/app/build.gradle.kts"
+          )
+
+          source = gradle.read_text()
+
+          namespace_file = Path(".tmp/original-android-namespace.txt")
+          original_namespace = namespace_file.read_text().strip()
+
+          source, namespace_count = re.subn(
+              r'(?m)^(\s*namespace\s*=\s*)"[^"]+"',
+              lambda match: match.group(1) + f'"{original_namespace}"',
+              source,
+              count=1
+          )
+
+          if namespace_count != 1:
+              raise SystemExit("Could not preserve original Android namespace")
+
+          application_id = 'applicationId = "chat.lumiverse.test.pr"'
+
+          if application_id not in source:
+              old = 'applicationId = "chat.lumiverse.test"'
+
+              if old not in source:
+                  raise SystemExit(
+                      "Could not find expected generated applicationId"
+                  )
+
+              source = source.replace(old, application_id, 1)
+
+          gradle.write_text(source)
+
+          print("Android namespace:", original_namespace)
+          print("Android application ID: chat.lumiverse.test.pr")
+          PY
 
       - name: Build APK
         run: bun run build:android-tauri

@@ -147,71 +147,60 @@ jobs:
           path: .tmp/android-prototype/debug.keystore
           key: lumiverse-pr-debug-keystore-v1
 
-      - name: Refresh Termux libnghttp2 package pin
+      - name: Refresh Termux ARM64 package metadata
         run: |
           python3 - <<'PY'
+          import gzip
           import json
           import urllib.request
           from pathlib import Path
 
-          repository = "https://ftp.fau.de/termux/termux-main"
-          index_url = repository + "dists/stable/main/binary-aarch64/Packages"
+          base = "https://ftp.fau.de/termux/termux-main"
+          index_url = base + "/dists/stable/main/binary-aarch64/Packages.gz"
+          lock_path = Path("android/native/termux-aarch64.json")
 
+          print(f"Fetching package index: {index_url}")
           request = urllib.request.Request(
               index_url,
-              headers={
-                  "User-Agent": "Mozilla/5.0 (compatible; GitHubActionsBuild/1.0)",
-                  "Accept": "*/*",
-              },
+              headers={"User-Agent": "Mozilla/5.0"}
           )
 
-          print("Fetching Termux ARM64 package metadata...")
           with urllib.request.urlopen(request, timeout=60) as response:
-              index = response.read().decode()
+              index_data = gzip.decompress(response.read()).decode("utf-8")
 
-          package = None
-
-          for stanza in index.split("\n\n"):
+          # Parse Debian package-index entries.
+          available = {}
+          for paragraph in index_data.split("\n\n"):
               fields = {}
-              for line in stanza.splitlines():
-                  if line.startswith((" ", "\t")):
-                      continue
-                  key, separator, value = line.partition(": ")
-                  if separator:
+              for line in paragraph.splitlines():
+                  if line and not line[0].isspace() and ":" in line:
+                      key, value = line.split(":", 1)
                       fields[key] = value.strip()
+              if "Package" in fields:
+                  available[fields["Package"]] = fields
 
-              if fields.get("Package") == "libnghttp2":
-                  package = fields
-                  break
+          lock = json.loads(lock_path.read_text())
+          updated = []
 
-          if not package:
-              raise SystemExit("libnghttp2 not found")
+          for package in lock["packages"]:
+              name = package["Package"]
+              if name not in available:
+                  raise SystemExit(f"Package missing from mirror index: {name}")
 
-          required = ("Version", "Filename", "SHA256")
-          if any(not package.get(field) for field in required):
-              raise SystemExit("Incomplete package metadata")
+              entry = available[name]
+              for field in ("Version", "Filename", "SHA256"):
+                  if field not in entry:
+                      raise SystemExit(f"{name}: index is missing {field}")
+                  package[field] = entry[field]
 
-          path = Path("android/native/termux-aarch64.json")
-          data = json.loads(path.read_text())
-          data["repository"] = repository
+              updated.append(f'{name} -> {entry["Version"]}')
 
-          entry = next(
-              (p for p in data["packages"] if p["Package"] == "libnghttp2"),
-              None
-          )
+          lock["repository"] = base
+          lock_path.write_text(json.dumps(lock, indent=2) + "\n")
 
-          if not entry:
-              raise SystemExit("libnghttp2 missing from package lock")
-
-          for field in required:
-              entry[field] = package[field]
-
-          path.write_text(json.dumps(data, indent=2) + "\n")
-
-          print("Updated package:")
-          print("Version:", package["Version"])
-          print("Filename:", package["Filename"])
-          print("SHA256:", package["SHA256"])
+          print("Updated locked packages:")
+          for item in updated:
+              print("  " + item)
           PY
 
       - name: Verify Termux package download

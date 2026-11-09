@@ -385,15 +385,13 @@ jobs:
           bunx tauri android init
 
       - name: Configure generated Android application ID
+        shell: bash
         run: |
           python3 - <<'PY'
           import re
           from pathlib import Path
 
-          gradle = Path(
-              "android/tauri/src-tauri/gen/android/app/build.gradle.kts"
-          )
-
+          gradle = Path("android/tauri/src-tauri/gen/android/app/build.gradle.kts")
           source = gradle.read_text()
 
           namespace_file = Path(".tmp/original-android-namespace.txt")
@@ -406,9 +404,8 @@ jobs:
               source,
               count=1
           )
-
           if count != 1:
-              raise SystemExit("Could not preserve original Android namespace")
+              raise SystemExit("Could not restore original Android namespace")
 
           # Set the separate test application ID.
           old = 'applicationId = "chat.lumiverse.test"'
@@ -416,11 +413,11 @@ jobs:
 
           if new not in source:
               if old not in source:
-                  raise SystemExit("Could not find applicationId")
+                  raise SystemExit("Could not find the expected applicationId")
               source = source.replace(old, new, 1)
 
-          # Explicitly enable BuildConfig generation.
-          if "buildFeatures {" in source:
+          # Ensure BuildConfig is generated.
+          if re.search(r'buildFeatures\s*\{', source):
               source = re.sub(
                   r'buildFeatures\s*\{',
                   'buildFeatures {\n        buildConfig = true',
@@ -428,19 +425,32 @@ jobs:
                   count=1
               )
           else:
-              source = re.sub(
+              source, count = re.subn(
                   r'(?m)^(\s*)buildTypes\s*\{',
                   r'\1buildFeatures {\n\1    buildConfig = true\n\1}\n\n\1buildTypes {',
                   source,
                   count=1
               )
+              if count != 1:
+                  raise SystemExit("Could not insert buildFeatures block")
 
           gradle.write_text(source)
-
-          print("Namespace:", original_namespace)
-          print("Application ID: chat.lumiverse.test.pr")
-          print("BuildConfig generation enabled.")
+          print("Configured test applicationId and enabled BuildConfig")
           PY
+
+      - name: Diagnose Android BuildConfig package
+        shell: bash
+        run: |
+          echo "=== Gradle namespace and BuildConfig settings ==="
+          grep -n -E 'namespace|applicationId|buildConfig' \
+            android/tauri/src-tauri/gen/android/app/build.gradle.kts
+
+          echo "=== Logger.kt package and BuildConfig reference ==="
+          sed -n '1,100p' \
+            android/tauri/src-tauri/gen/android/app/src/main/java/chat/lumiverse/test/pr/generated/Logger.kt
+
+          echo "=== Generated BuildConfig files ==="
+          find android/tauri/src-tauri/gen/android -iname '*BuildConfig*' -print
 
       - name: Build APK
         run: bun run build:android-tauri

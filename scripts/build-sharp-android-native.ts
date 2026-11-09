@@ -34,7 +34,7 @@ await Promise.all(Array.from({ length: 8 }, async () => {
 mkdirSync(sysroot, { recursive: true });
 for (const pkg of lock.packages) {
   const path = join(downloads, pkg.Filename.split("/").at(-1)!);
-  const unpacked = join(cache, "deb-merged", pkg.Package);
+  const unpacked = join(cache, "deb", pkg.Package);
   if (existsSync(join(unpacked, ".complete")) && readFileSync(join(unpacked, ".complete"), "utf8") === pkg.SHA256) continue;
   mkdirSync(unpacked, { recursive: true });
   await run(["dpkg-deb", "-x", path, unpacked]);

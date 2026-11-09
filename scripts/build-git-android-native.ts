@@ -26,7 +26,7 @@ await Promise.all(Array.from({ length: 4 }, async () => {
 mkdirSync(sysroot, { recursive: true });
 
 for (const pkg of lock.packages) {
-  const unpacked = join(cache, "git-deb-merged", pkg.Package);
+  const unpacked = join(cache, "git-deb", pkg.Package);
   const complete = join(unpacked, ".complete");
 
   if (

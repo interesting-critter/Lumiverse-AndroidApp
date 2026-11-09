@@ -399,32 +399,47 @@ jobs:
           namespace_file = Path(".tmp/original-android-namespace.txt")
           original_namespace = namespace_file.read_text().strip()
 
-          source, namespace_count = re.subn(
+          # Preserve the original namespace.
+          source, count = re.subn(
               r'(?m)^(\s*namespace\s*=\s*)"[^"]+"',
-              lambda match: match.group(1) + f'"{original_namespace}"',
+              lambda m: m.group(1) + f'"{original_namespace}"',
               source,
               count=1
           )
 
-          if namespace_count != 1:
+          if count != 1:
               raise SystemExit("Could not preserve original Android namespace")
 
-          application_id = 'applicationId = "chat.lumiverse.test.pr"'
+          # Set the separate test application ID.
+          old = 'applicationId = "chat.lumiverse.test"'
+          new = 'applicationId = "chat.lumiverse.test.pr"'
 
-          if application_id not in source:
-              old = 'applicationId = "chat.lumiverse.test"'
-
+          if new not in source:
               if old not in source:
-                  raise SystemExit(
-                      "Could not find expected generated applicationId"
-                  )
+                  raise SystemExit("Could not find applicationId")
+              source = source.replace(old, new, 1)
 
-              source = source.replace(old, application_id, 1)
+          # Explicitly enable BuildConfig generation.
+          if "buildFeatures {" in source:
+              source = re.sub(
+                  r'buildFeatures\s*\{',
+                  'buildFeatures {\n        buildConfig = true',
+                  source,
+                  count=1
+              )
+          else:
+              source = re.sub(
+                  r'(?m)^(\s*)buildTypes\s*\{',
+                  r'\1buildFeatures {\n\1    buildConfig = true\n\1}\n\n\1buildTypes {',
+                  source,
+                  count=1
+              )
 
           gradle.write_text(source)
 
-          print("Android namespace:", original_namespace)
-          print("Android application ID: chat.lumiverse.test.pr")
+          print("Namespace:", original_namespace)
+          print("Application ID: chat.lumiverse.test.pr")
+          print("BuildConfig generation enabled.")
           PY
 
       - name: Build APK

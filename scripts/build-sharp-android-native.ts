@@ -73,6 +73,7 @@ await run(["cmake", "-S", webpSource, "-B", webpBuild, `-DCMAKE_TOOLCHAIN_FILE=$
   "-DWEBP_BUILD_LIBWEBPMUX=ON", "-DWEBP_ENABLE_SWAP_16BIT_CSP=ON"]);
 await run(["cmake", "--build", webpBuild, "--parallel", "4"]);
 // Preserve filenames required by the other pinned libraries; SONAMEs are handled by the packager.
+mkdirSync(join(prefix, "lib"), { recursive: true });
 for (const name of ["libwebp.so", "libwebpdemux.so", "libwebpmux.so", "libsharpyuv.so"]) {
   const bytes = readFileSync(join(webpBuild, name));
   writeFileSync(join(prefix, "lib", name), bytes);

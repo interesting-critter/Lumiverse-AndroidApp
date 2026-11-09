@@ -83,10 +83,24 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          accept-android-sdk-licenses: false
 
-      - name: Install Android SDK components
+      - name: Accept Android SDK licenses and install components
         run: |
-          sdkmanager --licenses </dev/null || true
+          python3 - <<'PY'
+          import subprocess
+
+          result = subprocess.run(
+              ["sdkmanager", "--licenses"],
+              input="y\n" * 100,
+              text=True,
+          )
+
+          if result.returncode != 0:
+              raise SystemExit("Failed to accept Android SDK licenses")
+          PY
+
           sdkmanager \
             "platform-tools" \
             "platforms;android-36" \

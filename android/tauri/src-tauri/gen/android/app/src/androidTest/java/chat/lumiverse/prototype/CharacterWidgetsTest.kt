@@ -1,4 +1,4 @@
-package chat.lumiverse.prototype
+package chat.lumiverse.test
 
 import android.content.Context
 import android.content.Intent
@@ -8,12 +8,15 @@ import android.appwidget.AppWidgetHostView
 import android.appwidget.AppWidgetManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.os.Parcel
 import android.os.Bundle
 import android.os.Build
 import android.util.SizeF
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.RemoteViews
@@ -237,5 +240,57 @@ class CharacterWidgetsTest {
                 } finally { host.deleteAppWidgetId(id) }
             }
         } finally { host.stopListening(); host.deleteHost(); instrumentation.uiAutomation.dropShellPermissionIdentity() }
+    }
+    @Test fun widgetAppearanceDefaultsPreserveLookAndTintKeepsPaletteRgb() {
+        WidgetAppearance.set(context, WidgetAppearance.DEFAULT_OPACITY_PCT, WidgetAppearance.DEFAULT_CORNER_RADIUS_DP)
+        try {
+            assertEquals(100, WidgetAppearance.opacityPct(context))
+            assertEquals(24, WidgetAppearance.cornerRadiusDp(context))
+            val opaque = Color.parseColor("#171321")
+            // Default (100%) must be pixel-identical to the opaque palette color.
+            assertEquals(opaque, WidgetAppearance.tintedBackground(opaque, 100))
+            val half = WidgetAppearance.tintedBackground(opaque, 50)
+            assertEquals(128, Color.alpha(half))
+            assertEquals(Color.red(opaque), Color.red(half))
+            assertEquals(Color.green(opaque), Color.green(half))
+            assertEquals(Color.blue(opaque), Color.blue(half))
+            assertEquals(0, Color.alpha(WidgetAppearance.tintedBackground(opaque, 0)))
+            assertEquals(Color.red(opaque), Color.red(WidgetAppearance.tintedBackground(opaque, 0)))
+            // Storage coerces out-of-range input.
+            WidgetAppearance.set(context, -5, 99)
+            assertEquals(0, WidgetAppearance.opacityPct(context))
+            assertEquals(64, WidgetAppearance.cornerRadiusDp(context))
+            assertEquals(55, WidgetAppearance.effectiveRadiusDp(64))
+            assertEquals(24, WidgetAppearance.effectiveRadiusDp(24))
+            assertEquals(0, WidgetAppearance.effectiveRadiusDp(0))
+        } finally {
+            WidgetAppearance.set(context, WidgetAppearance.DEFAULT_OPACITY_PCT, WidgetAppearance.DEFAULT_CORNER_RADIUS_DP)
+        }
+    }
+    @Test fun layoutAppliesOpacityAndRadiusWithoutTouchingForegroundOrAccent() {
+        val active = enroll()
+        val snap = snapshot()
+        WidgetAppearance.set(context, 50, 10)
+        try {
+            InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                val root = CharacterWidgets.layout(context, active, snap, false, 2, 2, mutableMapOf())
+                    .apply(context, FrameLayout(context))
+                val background = root.findViewById<ImageView>(R.id.widget_background).drawable as GradientDrawable
+                val tinted = background.color!!.defaultColor
+                // enrolled palette default background, half alpha, exact RGB.
+                assertEquals(128, Color.alpha(tinted))
+                assertEquals(Color.parseColor("#171321"), Color.rgb(Color.red(tinted), Color.green(tinted), Color.blue(tinted)))
+                assertEquals(10f * context.resources.displayMetrics.density, background.cornerRadius, 0.01f)
+                // Foreground stays exactly the palette foreground.
+                assertEquals(Color.parseColor("#f5f0ff"), root.findViewById<TextView>(R.id.widget_title).currentTextColor)
+                // The enrolled palette itself is untouched by appearance settings.
+                val palette = CharacterWidgetStore.current(context)!!.optJSONObject("palette")!!
+                assertEquals("#171321", palette.getString("background"))
+                assertEquals("#f5f0ff", palette.getString("foreground"))
+                assertEquals("#bca6ff", palette.getString("accent"))
+            }
+        } finally {
+            WidgetAppearance.set(context, WidgetAppearance.DEFAULT_OPACITY_PCT, WidgetAppearance.DEFAULT_CORNER_RADIUS_DP)
+        }
     }
 }

@@ -1,4 +1,4 @@
-package chat.lumiverse.prototype
+package chat.lumiverse.test
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -397,13 +397,13 @@ class RuntimeService : Service() {
         const val IMPORT_STARTED = 6
         private const val QUERY = 7
         private const val STATE = 8
-        const val REMOTE_ON = "chat.lumiverse.prototype.REMOTE_ON"
-        const val REMOTE_OFF = "chat.lumiverse.prototype.REMOTE_OFF"
-        private const val STOP_SERVER = "chat.lumiverse.prototype.STOP_SERVER"
-        const val OPEN_RESTORE = "chat.lumiverse.prototype.OPEN_RESTORE"
+        const val REMOTE_ON = "chat.lumiverse.test.REMOTE_ON"
+        const val REMOTE_OFF = "chat.lumiverse.test.REMOTE_OFF"
+        private const val STOP_SERVER = "chat.lumiverse.test.STOP_SERVER"
+        const val OPEN_RESTORE = "chat.lumiverse.test.OPEN_RESTORE"
         private const val CHANNEL = "lumiverse-backup-restores"
         private const val NOTIFICATION = 23017
-        private const val CANCEL = "chat.lumiverse.prototype.CANCEL_RESTORE"
+        private const val CANCEL = "chat.lumiverse.test.CANCEL_RESTORE"
         private const val HOST_CHANNEL = "lumiverse-remote-access"
         private const val HOST_NOTIFICATION = 23018
 

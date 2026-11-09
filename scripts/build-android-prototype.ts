@@ -182,7 +182,7 @@ process.dlopen(module, join(directory, '${library}'));
       "--min-sdk-version", "29", "--target-sdk-version", "36", "--version-code", "1", "--version-name", `${pkg.version}-prototype.1`, resources]);
     const classes = join(staging, "classes"); mkdirSync(classes);
     await run([join(javaHome, "bin/javac"), "--release", "8", "-classpath", androidJar, "-d", classes,
-      join(ROOT, "android/src/chat/lumiverse/prototype/MainActivity.java"), join(ROOT, "android/src/chat/lumiverse/prototype/RuntimeHost.java")]);
+      join(ROOT, "android/src/chat/lumiverse/test/MainActivity.java"), join(ROOT, "android/src/chat/lumiverse/test/RuntimeHost.java")]);
     const jar = join(staging, "classes.jar");
     await run([join(javaHome, "bin/jar"), "cf", jar, "-C", classes, "."]);
     const dex = join(staging, "dex"); mkdirSync(dex);

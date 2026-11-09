@@ -3,4 +3,5 @@
     android:description="@string/widget_favorites_description" android:initialLayout="@layout/character_widget"
     android:previewLayout="@layout/character_widget" android:minWidth="110dp" android:minHeight="110dp"
     android:minResizeWidth="110dp" android:minResizeHeight="110dp" android:targetCellWidth="2" android:targetCellHeight="2"
-    android:resizeMode="horizontal|vertical" android:updatePeriodMillis="0" android:widgetCategory="home_screen" />
+    android:resizeMode="horizontal|vertical" android:updatePeriodMillis="0" android:widgetCategory="home_screen"
+    android:configure="chat.lumiverse.test.WidgetAppearanceConfigActivity" android:widgetFeatures="reconfigurable" />

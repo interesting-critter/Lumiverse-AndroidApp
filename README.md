@@ -151,7 +151,7 @@ the native toggle, and the notification's stop action.
 ## Remote notifications
 
 Official builds use `android/firebase/google-services.json` for Firebase project
-`lumiverse-bc911`, retaining application ID `chat.lumiverse.prototype`. Remote
+`lumiverse-bc911`, retaining application ID `chat.lumiverse.test`. Remote
 backends default to the Lumiverse FCM relay without receiving Firebase provider
 credentials. The relay must be deployed before releasing these clients. Users
 still enable notifications explicitly; local hosting keeps its notification-only

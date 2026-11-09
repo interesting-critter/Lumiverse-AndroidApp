@@ -10,7 +10,7 @@ const password = process.env.LUMIVERSE_ANDROID_TEST_PASSWORD
 const reportPath = process.argv.includes('--report') ? process.argv[process.argv.indexOf('--report') + 1] : undefined
 if (!password) throw new Error('Set LUMIVERSE_ANDROID_TEST_PASSWORD for the emulator\'s prototypecheck account')
 const adb = join(process.env.ANDROID_HOME || join(process.env.HOME!, 'Library/Android/sdk'), 'platform-tools/adb')
-const app = 'chat.lumiverse.prototype'
+const app = 'chat.lumiverse.test'
 const forwards: string[] = []
 async function command(...args: string[]) {
   const child = Bun.spawn([adb, '-s', serial!, ...args], { stdout: 'pipe', stderr: 'pipe' })

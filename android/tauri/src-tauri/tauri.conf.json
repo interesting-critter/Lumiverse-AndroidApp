@@ -2,7 +2,7 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Lumiverse",
   "version": "0.3.5",
-  "identifier": "chat.lumiverse.prototype",
+  "identifier": "chat.lumiverse.test",
   "build": { "frontendDist": "../ui" },
   "app": {
     "windows": [{ "label": "main", "title": "Lumiverse", "url": "index.html" }],

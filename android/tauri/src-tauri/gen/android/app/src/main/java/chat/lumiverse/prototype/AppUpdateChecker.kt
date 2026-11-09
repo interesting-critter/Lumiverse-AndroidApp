@@ -1,4 +1,4 @@
-package chat.lumiverse.prototype
+package chat.lumiverse.test
 
 import android.app.AlertDialog
 import android.content.Context

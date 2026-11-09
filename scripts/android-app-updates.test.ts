@@ -8,11 +8,11 @@ test('Android APK updates validate published assets, compare install versions, a
   const output = mkdtempSync(join(tmpdir(), 'lumiverse-app-updates-'))
   try {
     const compile = Bun.spawnSync([join(jdk, 'bin/javac'), '-d', output,
-      join(import.meta.dir, '../android/src/chat/lumiverse/prototype/AppUpdatePolicy.java'),
+      join(import.meta.dir, '../android/src/chat/lumiverse/test/AppUpdatePolicy.java'),
       join(import.meta.dir, '../android/tests/AppUpdatePolicyCheck.java')])
     expect(compile.stderr.toString()).toBe('')
     expect(compile.exitCode).toBe(0)
-    const run = Bun.spawnSync([join(jdk, 'bin/java'), '-cp', output, 'chat.lumiverse.prototype.AppUpdatePolicyCheck'])
+    const run = Bun.spawnSync([join(jdk, 'bin/java'), '-cp', output, 'chat.lumiverse.test.AppUpdatePolicyCheck'])
     expect(run.stderr.toString()).toBe('')
     expect(run.exitCode).toBe(0)
   } finally { rmSync(output, { recursive: true, force: true }) }

@@ -37,10 +37,10 @@ val firebaseConfig = firebaseConfigFile.takeIf { it.isFile }?.let {
 android {
     compileSdk = 36
     buildToolsVersion = "36.1.0"
-    namespace = "chat.lumiverse.prototype"
+    namespace = "chat.lumiverse.test"
     defaultConfig {
         manifestPlaceholders["usesCleartextTraffic"] = "false"
-        applicationId = "chat.lumiverse.prototype"
+        applicationId = "chat.lumiverse.test"
         minSdk = 29
         targetSdk = 36
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

@@ -11,4 +11,13 @@
     <string name="widget_no_recent">Your recent characters appear here</string>
     <string name="widget_no_favorites">Save a favorite to see them here</string>
     <string name="widget_open_character">Open chat with %1$s</string>
+    <!-- Long-press-only widget appearance settings (no in-app controls). -->
+    <string name="widget_appearance_title">Widget appearance</string>
+    <string name="widget_appearance_opacity">Background opacity: %1$d%%</string>
+    <string name="widget_appearance_radius">Corner radius: %1$d dp</string>
+    <string name="widget_appearance_preview">Widget preview</string>
+    <string name="widget_appearance_value">Value</string>
+    <string name="widget_appearance_save">Save</string>
+    <string name="widget_appearance_cancel">Cancel</string>
+    <string name="widget_appearance_launcher_note">The background fills the widget, with no outer inset. Your Android launcher may still clip or round the corners.</string>
 </resources>

@@ -1,4 +1,4 @@
-package chat.lumiverse.prototype
+package chat.lumiverse.test
 
 import android.webkit.WebView
 import androidx.webkit.WebViewCompat

@@ -1,4 +1,4 @@
-package chat.lumiverse.prototype;
+package chat.lumiverse.test;
 
 import java.nio.charset.StandardCharsets;
 import javax.crypto.Cipher;

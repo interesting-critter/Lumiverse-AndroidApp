@@ -18,7 +18,7 @@ const reportIndex = args.indexOf("--report");
 const reportPath = reportIndex >= 0 ? resolve(args[reportIndex + 1] || "") : undefined;
 const sdk = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT || join(process.env.HOME || "", "Library/Android/sdk");
 const adb = join(sdk, "platform-tools/adb");
-const app = "chat.lumiverse.prototype";
+const app = "chat.lumiverse.test";
 async function command(...args: string[]) {
   const child = Bun.spawn([adb, "-s", serial!, ...args], { stdout: "pipe", stderr: "pipe" });
   const [out, err, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
@@ -150,7 +150,7 @@ if (args.includes("--require-tauri")) {
   // Only the read-only host-info command is permitted on the remote loopback page.
   assert.equal(await evaluate("window.__TAURI_INTERNALS__.invoke('plugin:fs|read_file',{path:'/data/local/tmp'}).then(()=>false,()=>true)"), true);
 }
-assert.match(first.dataDir, /^\/data\/(user\/\d+|data)\/chat\.lumiverse\.prototype\/files\/lumiverse\/data$/);
+assert.match(first.dataDir, /^\/data\/(user\/\d+|data)\/chat\.lumiverse\.test\/files\/lumiverse\/data$/);
 assert.equal((await runtimeApi("status", undefined, false)).status, 403);
 assert.equal((await runtimeApi("backend/stop", {}, false)).status, 403);
 await command("shell", "am", "force-stop", app);

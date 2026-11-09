@@ -1,4 +1,4 @@
-package chat.lumiverse.prototype;
+package chat.lumiverse.test;
 
 public final class AppUpdatePolicyCheck {
     private static final String TAG = "android-v0.3.5-nightly.20261028.20";

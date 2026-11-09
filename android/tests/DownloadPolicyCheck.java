@@ -1,4 +1,4 @@
-package chat.lumiverse.prototype;
+package chat.lumiverse.test;
 
 public final class DownloadPolicyCheck {
     public static void main(String[] args) {

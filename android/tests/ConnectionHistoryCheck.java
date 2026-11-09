@@ -1,4 +1,4 @@
-package chat.lumiverse.prototype;
+package chat.lumiverse.test;
 
 import java.util.Arrays;
 import java.util.Collections;

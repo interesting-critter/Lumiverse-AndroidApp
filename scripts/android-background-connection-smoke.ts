@@ -21,7 +21,7 @@ export async function waitForAndroidLocalFrontend(evaluate: Evaluate): Promise<s
 
 /** The real embedded server must remain reachable without a live DevTools session. */
 export async function checkAndroidBackgroundConnection(evaluate: Evaluate, command: Command) {
-  const app = 'chat.lumiverse.prototype'
+  const app = 'chat.lumiverse.test'
   const origin = await waitForAndroidLocalFrontend(evaluate)
   const address = new URL(origin)
   const mainPid = await command('shell', 'pidof', app)

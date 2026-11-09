@@ -7,7 +7,7 @@ type Command = (...args: string[]) => Promise<string>;
 
 /** Disposable emulator only: the caller has authenticated the prototypecheck account. */
 export async function checkAndroidBackgroundRestore(evaluate: Evaluate, command: Command, password: string) {
-  const app = "chat.lumiverse.prototype";
+  const app = "chat.lumiverse.test";
   const address = new URL(await evaluate<string>("location.origin"));
   const port = await command("forward", "tcp:0", `tcp:${address.port}`);
   const endpoint = `http://127.0.0.1:${port}`;

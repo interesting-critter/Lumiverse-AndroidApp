@@ -8,17 +8,17 @@ test('native notification and download policies canonicalize origins and isolate
   const output = mkdtempSync(join(tmpdir(), 'lumiverse-notification-policy-'))
   try {
     const compile = Bun.spawnSync([join(jdk, 'bin/javac'), '-d', output,
-      join(import.meta.dir, 'src/chat/lumiverse/prototype/ServerAddress.java'),
-      join(import.meta.dir, 'src/chat/lumiverse/prototype/NotificationPolicy.java'),
-      join(import.meta.dir, 'src/chat/lumiverse/prototype/DownloadPolicy.java'),
+      join(import.meta.dir, 'src/chat/lumiverse/test/ServerAddress.java'),
+      join(import.meta.dir, 'src/chat/lumiverse/test/NotificationPolicy.java'),
+      join(import.meta.dir, 'src/chat/lumiverse/test/DownloadPolicy.java'),
       join(import.meta.dir, 'tests/NotificationPolicyCheck.java'),
       join(import.meta.dir, 'tests/DownloadPolicyCheck.java')])
     expect(compile.stderr.toString()).toBe('')
     expect(compile.exitCode).toBe(0)
-    const run = Bun.spawnSync([join(jdk, 'bin/java'), '-cp', output, 'chat.lumiverse.prototype.NotificationPolicyCheck'])
+    const run = Bun.spawnSync([join(jdk, 'bin/java'), '-cp', output, 'chat.lumiverse.test.NotificationPolicyCheck'])
     expect(run.stderr.toString()).toBe('')
     expect(run.exitCode).toBe(0)
-    const downloads = Bun.spawnSync([join(jdk, 'bin/java'), '-cp', output, 'chat.lumiverse.prototype.DownloadPolicyCheck'])
+    const downloads = Bun.spawnSync([join(jdk, 'bin/java'), '-cp', output, 'chat.lumiverse.test.DownloadPolicyCheck'])
     expect(downloads.stderr.toString()).toBe('')
     expect(downloads.exitCode).toBe(0)
   } finally { rmSync(output, { recursive: true, force: true }) }

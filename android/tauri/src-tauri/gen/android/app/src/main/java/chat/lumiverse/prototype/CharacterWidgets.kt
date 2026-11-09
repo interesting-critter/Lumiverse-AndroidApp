@@ -1,4 +1,4 @@
-package chat.lumiverse.prototype
+package chat.lumiverse.test
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -15,6 +15,7 @@ import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Shader
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -77,7 +78,20 @@ object CharacterWidgets {
         val background = color("background", "#171321")
         val foreground = color("foreground", "#f5f0ff")
         val accent = color("accent", "#bca6ff")
-        views.setInt(R.id.widget_background, "setColorFilter", background)
+        // Opacity + corner radius are long-press-only widget appearance settings
+        // (WidgetAppearance). Only the alpha channel changes: the palette RGB,
+        // foreground, and accent below stay exactly as enrolled. A runtime
+        // GradientDrawable carries both the tinted color and the radius (no
+        // setColorFilter on top, which would double-tint); the static
+        // widget_background.xml shape remains the initial/preview drawable.
+        val tintedBackground = WidgetAppearance.tintedBackground(background, WidgetAppearance.opacityPct(context))
+        val radiusPx = WidgetAppearance.effectiveRadiusDp(WidgetAppearance.cornerRadiusDp(context)) *
+            context.resources.displayMetrics.density
+        views.setImageDrawable(R.id.widget_background, GradientDrawable().apply {
+            shape = GradientDrawable.Shape.RECTANGLE
+            setColor(tintedBackground)
+            cornerRadius = radiusPx
+        })
         views.setTextViewText(R.id.widget_title, context.getString(if (favorites) R.string.widget_favorites else R.string.widget_recent))
         views.setTextColor(R.id.widget_title, foreground)
         views.setImageViewResource(R.id.widget_symbol, if (favorites) R.drawable.widget_ic_favorite else R.drawable.widget_ic_recent)
@@ -103,6 +117,8 @@ object CharacterWidgets {
                 val item = items.getOrNull(row * columns + column)
                 if (item == null) cell.setViewVisibility(R.id.widget_card, View.INVISIBLE)
                 else {
+                    // Portraits stay on the opaque palette color: RGB_565 has no
+                    // alpha channel, and opacity applies only to the widget background.
                     val bitmap = bitmaps.getOrPut(item.characterId) { portrait(context, item, background, accent) }
                     cell.setImageViewBitmap(R.id.widget_portrait, bitmap)
                     cell.setTextViewText(R.id.widget_name, item.name)

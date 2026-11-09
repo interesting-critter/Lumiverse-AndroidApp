@@ -234,10 +234,62 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
             .tmp/android-native
-          key: ${{ runner.os }}-android-native-rust197-ndk28c-${{ hashFiles('backend-source.json', 'android/native/termux-aarch64.json', 'android/native/object-store-android.rs', '**/Cargo.lock', 'scripts/build-*-android-native.ts') }}
+          key: ${{ runner.os }}-android-native-rust197-ndk28c-${{ hashFiles('backend-source.json', 'android/native/termux-aarch64.json', 'android/native/object-store-android.rs', '**/Cargo.lock', 'scripts/build-*-android-native.ts', 'android/native/ffmpeg-aarch64.json') }}
           restore-keys: |
             ${{ runner.os }}-android-native-rust197-ndk28c-
 
+      - name: Refresh FFmpeg package lock
+        run: |
+          python3 - <<'PY'
+          import gzip
+          import json
+          import urllib.request
+          from pathlib import Path
+
+          lock_path = Path("android/native/ffmpeg-aarch64.json")
+          lock = json.loads(lock_path.read_text())
+
+          base = "https://ftp.fau.de/termux/termux-main/"
+          index_url = base + "dists/stable/main/binary-aarch64/Packages.gz"
+
+          request = urllib.request.Request(
+              index_url,
+              headers={"User-Agent": "Mozilla/5.0"}
+          )
+
+          with urllib.request.urlopen(request) as response:
+              content = gzip.decompress(response.read()).decode()
+
+          packages = {}
+
+          for paragraph in content.split("\n\n"):
+              entry = {}
+              for line in paragraph.splitlines():
+                  if line and not line[0].isspace() and ": " in line:
+                      key, value = line.split(": ", 1)
+                      entry[key] = value
+
+              if entry.get("Package") and entry.get("Filename"):
+                  packages[entry["Package"]] = entry
+
+          for pkg in lock["packages"]:
+              current = packages.get(pkg["Package"])
+
+              if not current:
+                  raise SystemExit(
+                      f"Package missing from mirror index: {pkg['Package']}"
+                  )
+
+              pkg["Version"] = current["Version"]
+              pkg["Filename"] = current["Filename"]
+              pkg["SHA256"] = current["SHA256"]
+
+          lock["repository"] = base
+          lock_path.write_text(json.dumps(lock, indent=2) + "\n")
+
+          print(f"Refreshed {len(lock['packages'])} FFmpeg package entries.")
+          PY
+          
       - name: Build Android native dependencies
         run: bun run build:android-native
 
@@ -251,7 +303,7 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
             .tmp/android-native
-          key: ${{ runner.os }}-android-native-rust197-ndk28c-${{ hashFiles('backend-source.json', 'android/native/termux-aarch64.json', 'android/native/object-store-android.rs', '**/Cargo.lock', 'scripts/build-*-android-native.ts') }}
+          key: ${{ runner.os }}-android-native-rust197-ndk28c-${{ hashFiles('backend-source.json', 'android/native/termux-aarch64.json', 'android/native/object-store-android.rs', '**/Cargo.lock', 'scripts/build-*-android-native.ts', 'android/native/ffmpeg-aarch64.json') }}
 
       - name: Build APK
         run: bun run build:android-tauri

@@ -155,7 +155,7 @@ jobs:
           import urllib.request
           from pathlib import Path
 
-          base = "https://ftp.fau.de/termux/termux-main"
+          base = "https://ftp.fau.de/termux/termux-main/"
           index_url = base + "/dists/stable/main/binary-aarch64/Packages.gz"
           lock_path = Path("android/native/termux-aarch64.json")
 

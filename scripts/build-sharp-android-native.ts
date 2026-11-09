@@ -37,10 +37,7 @@ for (const pkg of lock.packages) {
   const unpacked = join(cache, "deb", pkg.Package);
   if (existsSync(join(unpacked, ".complete")) && readFileSync(join(unpacked, ".complete"), "utf8") === pkg.SHA256) continue;
   mkdirSync(unpacked, { recursive: true });
-  await run(["tar", "-xf", path, "-C", unpacked]);
-  const archive = readdirSync(unpacked).find(name => name.startsWith("data.tar."));
-  if (!archive) throw new Error(`Missing data archive: ${pkg.Package}`);
-  await run(["tar", "-xf", join(unpacked, archive), "-C", sysroot]);
+  await run(["dpkg-deb", "-x", path, unpacked]);
   writeFileSync(join(unpacked, ".complete"), pkg.SHA256);
 }
 console.log("[android-native] Android libvips dependencies extracted and verified.");

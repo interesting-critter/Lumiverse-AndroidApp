@@ -38,7 +38,8 @@ for (const pkg of lock.packages) {
   if (existsSync(join(unpacked, ".complete")) && readFileSync(join(unpacked, ".complete"), "utf8") === pkg.SHA256) continue;
   mkdirSync(unpacked, { recursive: true });
   await run(["dpkg-deb", "-x", path, unpacked]);
-  writeFileSync(join(unpacked, ".complete"), pkg.SHA256);
+  await run(["cp", "-a", `${unpacked}/.`, sysroot]);
+writeFileSync(join(unpacked, ".complete"), pkg.SHA256);
 }
 console.log("[android-native] Android libvips dependencies extracted and verified.");
 // Node-API is stable across Node/Bun versions. Only headers are used; no Node runtime is bundled.

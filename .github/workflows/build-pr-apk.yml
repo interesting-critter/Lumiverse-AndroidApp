@@ -234,7 +234,7 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
             .tmp/android-native
-          key: ${{ runner.os }}-android-native-rust197-ndk28c-${{ hashFiles('backend-source.json', 'android/native/termux-aarch64.json', 'android/native/object-store-android.rs', '**/Cargo.lock', 'scripts/build-*-android-native.ts', 'android/native/ffmpeg-aarch64.json') }}
+          key: ${{ runner.os }}-android-native-rust197-ndk28c-${{ hashFiles('backend-source.json', 'android/native/termux-aarch64.json', 'android/native/object-store-android.rs', '**/Cargo.lock', 'scripts/build-*-android-native.ts', 'android/native/ffmpeg-aarch64.json', 'android/native/git-aarch64.json') }}
           restore-keys: |
             ${{ runner.os }}-android-native-rust197-ndk28c-
 
@@ -355,7 +355,7 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
             .tmp/android-native
-          key: ${{ runner.os }}-android-native-rust197-ndk28c-${{ hashFiles('backend-source.json', 'android/native/termux-aarch64.json', 'android/native/object-store-android.rs', '**/Cargo.lock', 'scripts/build-*-android-native.ts', 'android/native/ffmpeg-aarch64.json') }}
+          key: ${{ runner.os }}-android-native-rust197-ndk28c-${{ hashFiles('backend-source.json', 'android/native/termux-aarch64.json', 'android/native/object-store-android.rs', '**/Cargo.lock', 'scripts/build-*-android-native.ts', 'android/native/ffmpeg-aarch64.json', 'android/native/git-aarch64.json') }}
 
       - name: Build APK
         run: bun run build:android-tauri

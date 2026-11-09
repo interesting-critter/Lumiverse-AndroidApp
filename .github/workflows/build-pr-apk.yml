@@ -1,0 +1,160 @@
+
+name: Build Lumiverse PR APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch in this fork to build"
+        required: true
+        type: string
+        default: "main"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ARM64 Android APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    env:
+      LUMIVERSE_BACKEND_DIR: ${{ github.workspace }}/backend
+      CARGO_BUILD_JOBS: 4
+
+    steps:
+      - name: Check out PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Read pinned backend revision
+        id: backend
+        run: |
+          echo "repository=$(jq -r '.repository' backend-source.json)" >> "$GITHUB_OUTPUT"
+          echo "ref=$(jq -r '.ref' backend-source.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Check out matching Lumiverse backend
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.backend.outputs.repository }}
+          ref: ${{ steps.backend.outputs.ref }}
+          path: backend
+
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.4"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@1.97.0
+        with:
+          targets: aarch64-linux-android
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            clang \
+            cmake \
+            ninja-build \
+            pkg-config \
+            libssl-dev \
+            autoconf \
+            automake \
+            libtool \
+            python3 \
+            curl \
+            unzip \
+            zip
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK components
+        run: |
+          sdkmanager --licenses </dev/null || true
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-36" \
+            "build-tools;36.1.0" \
+            "ndk;28.2.13676358" \
+            "cmake;3.22.1"
+
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/28.2.13676358" >> "$GITHUB_ENV"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/28.2.13676358" >> "$GITHUB_ENV"
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: |
+          bun install --frozen-lockfile
+          cd frontend
+          bun install --frozen-lockfile
+
+      - name: Install Android app dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Configure separate test application ID
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          config = Path("android/tauri/src-tauri/tauri.conf.json")
+          data = json.loads(config.read_text())
+          data["identifier"] = "chat.lumiverse.test.pr"
+          config.write_text(json.dumps(data, indent=2) + "\n")
+
+          gradle = Path(
+              "android/tauri/src-tauri/gen/android/app/build.gradle.kts"
+          )
+          source = gradle.read_text()
+
+          old = 'applicationId = "chat.lumiverse.test"'
+          new = 'applicationId = "chat.lumiverse.test.pr"'
+
+          if old not in source:
+              raise SystemExit("Original applicationId not found")
+
+          gradle.write_text(source.replace(old, new))
+
+          # The bundled Firebase configuration is registered to the
+          # original app ID. Omit it from this separate test installation.
+          Path("android/firebase/google-services.json").unlink(missing_ok=True)
+          PY
+
+      - name: Restore test signing key
+        uses: actions/cache@v4
+        with:
+          path: .tmp/android-prototype/debug.keystore
+          key: lumiverse-pr-debug-keystore-v1
+
+      - name: Build Android native dependencies
+        run: bun run build:android-native
+
+      - name: Build APK
+        run: bun run build:android-tauri
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: lumiverse-pr-test-apk
+          path: |
+            dist/android/lumiverse-tauri-arm64.apk
+            dist/android/lumiverse-tauri-arm64.apk.json
+            dist/android/lumiverse-tauri-arm64.apk.sha256
+          if-no-files-found: error
+          retention-days: 14

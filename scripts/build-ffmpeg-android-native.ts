@@ -24,7 +24,7 @@ await Promise.all(Array.from({ length: 8 }, async () => {
 }));
 mkdirSync(sysroot, { recursive: true });
 for (const pkg of lock.packages) {
-  const unpacked = join(cache, "deb-merged", pkg.Package);
+  const unpacked = join(cache, "deb", pkg.Package);
   const complete = join(unpacked, ".complete");
 
   if (

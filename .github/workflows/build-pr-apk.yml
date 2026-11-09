@@ -147,6 +147,23 @@ jobs:
           path: .tmp/android-prototype/debug.keystore
           key: lumiverse-pr-debug-keystore-v1
 
+      - name: Use working Termux package mirror
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("android/native/termux-aarch64.json")
+          data = json.loads(path.read_text())
+
+          data["repository"] = (
+              "https://packages-cf.termux.dev/apt/termux-main/"
+          )
+
+          path.write_text(json.dumps(data, indent=2) + "\n")
+          print("Updated Termux package mirror:", data["repository"])
+          PY
+
       - name: Build Android native dependencies
         run: bun run build:android-native
 

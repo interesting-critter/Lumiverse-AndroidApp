@@ -87,11 +87,11 @@ object CharacterWidgets {
         val tintedBackground = WidgetAppearance.tintedBackground(background, WidgetAppearance.opacityPct(context))
         val radiusPx = WidgetAppearance.effectiveRadiusDp(WidgetAppearance.cornerRadiusDp(context)) *
             context.resources.displayMetrics.density
-        views.setImageDrawable(R.id.widget_background, GradientDrawable().apply {
-            shape = GradientDrawable.Shape.RECTANGLE
-            setColor(tintedBackground)
-            cornerRadius = radiusPx
-        })
+        views.setInt(
+            R.id.widget_background,
+            "setBackgroundColor",
+            tintedBackground
+        )
         views.setTextViewText(R.id.widget_title, context.getString(if (favorites) R.string.widget_favorites else R.string.widget_recent))
         views.setTextColor(R.id.widget_title, foreground)
         views.setImageViewResource(R.id.widget_symbol, if (favorites) R.drawable.widget_ic_favorite else R.drawable.widget_ic_recent)

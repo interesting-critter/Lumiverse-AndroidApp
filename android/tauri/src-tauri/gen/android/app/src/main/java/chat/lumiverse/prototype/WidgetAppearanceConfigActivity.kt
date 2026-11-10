@@ -216,7 +216,7 @@ class WidgetAppearanceConfigActivity : AppCompatActivity() {
         opacityLabel.text = getString(R.string.widget_appearance_opacity, opacityPct)
         radiusLabel.text = getString(R.string.widget_appearance_radius, cornerRadiusDp)
         preview.background = GradientDrawable().apply {
-            shape = GradientDrawable.Shape.RECTANGLE
+            shape = GradientDrawable.RECTANGLE
             setColor(WidgetAppearance.tintedBackground(baseBackground, opacityPct))
             cornerRadius = WidgetAppearance.effectiveRadiusDp(cornerRadiusDp) * resources.displayMetrics.density
         }

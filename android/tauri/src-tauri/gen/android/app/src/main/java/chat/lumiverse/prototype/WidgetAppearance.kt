@@ -26,13 +26,6 @@ object WidgetAppearance {
     const val MAX_OPACITY_PCT = 100
     const val MAX_CORNER_RADIUS_DP = 64
 
-    /**
-     * The smallest widget bucket is 110dp wide, so a corner radius above
-     * half of that would be clamped visually anyway. Clamp rendering to
-     * 55dp while still persisting the user's full 0..64 choice.
-     */
-    const val MAX_EFFECTIVE_RADIUS_DP = 55
-
     private fun prefs(context: Context) =
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
@@ -58,8 +51,4 @@ object WidgetAppearance {
         val alpha = (opacityPct.coerceIn(0, MAX_OPACITY_PCT) * 255f / 100f).roundToInt()
         return Color.argb(alpha, Color.red(opaqueBackground), Color.green(opaqueBackground), Color.blue(opaqueBackground))
     }
-
-    /** Radius actually used for rendering, clamped to the smallest widget bucket. */
-    fun effectiveRadiusDp(radiusDp: Int): Int =
-        radiusDp.coerceIn(0, MAX_CORNER_RADIUS_DP).coerceAtMost(MAX_EFFECTIVE_RADIUS_DP)
 }

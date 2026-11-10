@@ -1,6 +1,7 @@
 package chat.lumiverse.prototype
 
 import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
@@ -53,8 +54,11 @@ class WidgetAppearanceConfigActivity : AppCompatActivity() {
         appWidgetId = intent.getIntExtra(
             AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID
         )
-        if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
-            setResult(RESULT_CANCELED)
+        setResult(RESULT_CANCELED, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId))
+        val provider = AppWidgetManager.getInstance(this).getAppWidgetInfo(appWidgetId)?.provider
+        if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID || provider !in listOf(
+                ComponentName(this, RecentCharactersWidget::class.java),
+                ComponentName(this, FavoriteCharactersWidget::class.java))) {
             finish()
             return
         }
@@ -218,7 +222,8 @@ class WidgetAppearanceConfigActivity : AppCompatActivity() {
         preview.background = GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
             setColor(WidgetAppearance.tintedBackground(baseBackground, opacityPct))
-            cornerRadius = WidgetAppearance.effectiveRadiusDp(cornerRadiusDp) * resources.displayMetrics.density
+            // XML shape radii round to whole pixels; match the host drawable.
+            cornerRadius = (cornerRadiusDp * resources.displayMetrics.density).roundToInt().toFloat()
         }
         previewTitle.setTextColor(baseForeground)
         saveButton.isEnabled = opacityValid

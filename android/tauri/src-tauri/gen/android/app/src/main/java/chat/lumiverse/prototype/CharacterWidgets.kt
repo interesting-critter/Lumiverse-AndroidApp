@@ -15,7 +15,6 @@ import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Shader
-import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -78,41 +77,13 @@ object CharacterWidgets {
         val background = color("background", "#171321")
         val foreground = color("foreground", "#f5f0ff")
         val accent = color("accent", "#bca6ff")
-        // Opacity + corner radius are long-press-only widget appearance settings
-        // (WidgetAppearance). Only the alpha channel changes: the palette RGB,
-        // foreground, and accent below stay exactly as enrolled. A runtime
-        // GradientDrawable carries both the tinted color and the radius (no
-        // setColorFilter on top, which would double-tint); the static
-        // widget_background.xml shape remains the initial/preview drawable.
-        val tintedBackground = WidgetAppearance.tintedBackground(background, WidgetAppearance.opacityPct(context))
-        val radiusPx = WidgetAppearance.effectiveRadiusDp(WidgetAppearance.cornerRadiusDp(context)) *
-            context.resources.displayMetrics.density
-        val backgroundWidth = (columns * 110f * context.resources.displayMetrics.density)
-            .toInt()
-            .coerceAtLeast(1)
-
-        val backgroundHeight = (rows * 110f * context.resources.displayMetrics.density)
-            .toInt()
-            .coerceAtLeast(1)
-
-        val backgroundBitmap = Bitmap.createBitmap(
-            backgroundWidth,
-            backgroundHeight,
-            Bitmap.Config.ARGB_8888
-        )
-
-        val backgroundDrawable = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            setColor(tintedBackground)
-            cornerRadius = radiusPx
-        }
-
-        Canvas(backgroundBitmap).apply {
-            backgroundDrawable.setBounds(0, 0, width, height)
-            backgroundDrawable.draw(this)
-        }
-
-        views.setImageViewBitmap(R.id.widget_background, backgroundBitmap)
+        // Resource shapes keep their radius in dp at the host's actual size.
+        // No background bitmaps enter the shared responsive RemoteViews budget.
+        views.setImageViewResource(R.id.widget_background, R.drawable.widget_background_radii)
+        views.setInt(R.id.widget_background, "setImageLevel", WidgetAppearance.cornerRadiusDp(context))
+        views.setInt(R.id.widget_background, "setColorFilter", background)
+        views.setInt(R.id.widget_background, "setImageAlpha", Color.alpha(
+            WidgetAppearance.tintedBackground(background, WidgetAppearance.opacityPct(context))))
         views.setTextViewText(R.id.widget_title, context.getString(if (favorites) R.string.widget_favorites else R.string.widget_recent))
         views.setTextColor(R.id.widget_title, foreground)
         views.setImageViewResource(R.id.widget_symbol, if (favorites) R.drawable.widget_ic_favorite else R.drawable.widget_ic_recent)

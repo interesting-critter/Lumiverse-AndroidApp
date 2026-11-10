@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Optional configuration is supported from Android 12; older hosts retain the default placement flow. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_recent_description" android:initialLayout="@layout/character_widget"
+    android:previewLayout="@layout/character_widget" android:minWidth="110dp" android:minHeight="110dp"
+    android:minResizeWidth="110dp" android:minResizeHeight="110dp" android:targetCellWidth="2" android:targetCellHeight="2"
+    android:resizeMode="horizontal|vertical" android:updatePeriodMillis="0" android:widgetCategory="home_screen"
+    android:configure="chat.lumiverse.prototype.WidgetAppearanceConfigActivity"
+    android:widgetFeatures="reconfigurable|configuration_optional" />
